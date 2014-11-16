@@ -17,7 +17,9 @@ using namespace clang;
 NSAPI::NSAPI(ASTContext &ctx)
   : Ctx(ctx), ClassIds(), BOOLId(nullptr), NSIntegerId(nullptr),
     NSUIntegerId(nullptr), NSASCIIStringEncodingId(nullptr),
-    NSUTF8StringEncodingId(nullptr) {}
+    NSUTF8StringEncodingId(nullptr), NSPointId(nullptr),
+    NSSizeId(nullptr), NSRectId(nullptr), CGPointId(nullptr),
+    CGSizeId(nullptr), CGRectId(nullptr), NSRangeId(nullptr) {}
 
 IdentifierInfo *NSAPI::getNSClassId(NSClassIdKindKind K) const {
   static const char *ClassName[NumClassIds] = {
@@ -31,6 +33,7 @@ IdentifierInfo *NSAPI::getNSClassId(NSClassIdKindKind K) const {
     "NSMutableSet",
     "NSCountedSet",
     "NSMutableOrderedSet"
+    "NSValue"
   };
 
   if (!ClassIds[K])
@@ -374,6 +377,25 @@ Selector NSAPI::getNSNumberLiteralSelector(NSNumberLiteralMethodKind MK,
   return Sels[MK];
 }
 
+Selector NSAPI::getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const {
+  static const char *ClassSelectorName[NumNSValueLiteralMethods] = {
+    "valueWithPoint",
+    "valueWithSize",
+    "valueWithRect",
+    "valueWithCGPoint",
+    "valueWithCGSize",
+    "valueWithCGRect",
+    "valueWithRange",
+  };
+  
+  Selector *Sels = NSValueClassSelectors;
+  const char **Names = ClassSelectorName;
+  
+  if (Sels[MK].isNull())
+    Sels[MK] = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get(Names[MK]));
+  return Sels[MK];
+}
+
 Optional<NSAPI::NSNumberLiteralMethodKind>
 NSAPI::getNSNumberLiteralMethodKind(Selector Sel) const {
   for (unsigned i = 0; i != NumNSNumberLiteralMethods; ++i) {
@@ -466,6 +488,30 @@ NSAPI::getNSNumberFactoryMethodKind(QualType T) const {
   return None;
 }
 
+Optional<NSAPI::NSValueLiteralMethodKind>
+NSAPI::getNSValueFactoryMethodKind(QualType T) const {
+  const RecordType *RT = T->getAsStructureType();
+  if (!RT)
+    return None;
+  
+  if (isObjCNSPointType(T))
+    return NSAPI::NSValueWithPoint;
+  if (isObjCNSSizeType(T))
+    return NSAPI::NSValueWithSize;
+  if (isObjCNSRectType(T))
+    return NSAPI::NSValueWithRect;
+  if (isObjCCGPointType(T))
+    return NSAPI::NSValueWithCGPoint;
+  if (isObjCCGSizeType(T))
+    return NSAPI::NSValueWithCGSize;
+  if (isObjCCGRectType(T))
+    return NSAPI::NSValueWithCGRect;
+  if (isObjCNSRangeType(T))
+    return NSAPI::NSValueWithRange;
+  
+  return None;
+}
+
 /// \brief Returns true if \param T is a typedef of "BOOL" in objective-c.
 bool NSAPI::isObjCBOOLType(QualType T) const {
   return isObjCTypedef(T, "BOOL", BOOLId);
@@ -477,6 +523,41 @@ bool NSAPI::isObjCNSIntegerType(QualType T) const {
 /// \brief Returns true if \param T is a typedef of "NSUInteger" in objective-c.
 bool NSAPI::isObjCNSUIntegerType(QualType T) const {
   return isObjCTypedef(T, "NSUInteger", NSUIntegerId);
+}
+
+/// \brief Returns true if \param T is a typedef of "NSPoint" in objective-c.
+bool NSAPI::isObjCNSPointType(QualType T) const {
+  return isObjCTypedef(T, "NSPoint", NSPointId);
+}
+
+/// \brief Returns true if \param T is a typedef of "NSSize" in objective-c.
+bool NSAPI::isObjCNSSizeType(QualType T) const {
+  return isObjCTypedef(T, "NSSize", NSSizeId);
+}
+
+/// \brief Returns true if \param T is a typedef of "NSRect" in objective-c.
+bool NSAPI::isObjCNSRectType(QualType T) const {
+  return isObjCTypedef(T, "NSRect", NSRectId);
+}
+
+/// \brief Returns true if \param T is a typedef of "CGPoint" in objective-c.
+bool NSAPI::isObjCCGPointType(QualType T) const {
+  return isObjCTypedef(T, "CGPoint", CGPointId);
+}
+
+/// \brief Returns true if \param T is a typedef of "CGSize" in objective-c.
+bool NSAPI::isObjCCGSizeType(QualType T) const {
+  return isObjCTypedef(T, "CGSize", CGSizeId);
+}
+
+/// \brief Returns true if \param T is a typedef of "CGRect" in objective-c.
+bool NSAPI::isObjCCGRectType(QualType T) const {
+  return isObjCTypedef(T, "CGRect", CGRectId);
+}
+
+/// \brief Returns true if \param T is a typedef of "NSRange" in objective-c.
+bool NSAPI::isObjCNSRangeType(QualType T) const {
+  return isObjCTypedef(T, "NSRange", NSRangeId);
 }
 
 StringRef NSAPI::GetNSIntegralKind(QualType T) const {
