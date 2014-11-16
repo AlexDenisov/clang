@@ -255,6 +255,92 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
   return Method;
 }
 
+/// \brief Retrieve the NSValue factory method that should be used to create
+/// an Objective-C literal for the given type.
+static ObjCMethodDecl *getNSValueFactoryMethod(Sema &S, SourceLocation Loc,
+                                               QualType ValueType,
+                                               bool isLiteral = false,
+                                               SourceRange R = SourceRange()) {
+  Optional<NSAPI::NSValueLiteralMethodKind> Kind =
+  S.NSAPIObj->getNSValueFactoryMethodKind(ValueType);
+  
+  if (!Kind) {
+    if (isLiteral) {
+      S.Diag(Loc, diag::err_invalid_nsvalue_type)
+      << ValueType << R;
+    }
+    return nullptr;
+  }
+  
+  // If we already looked up this method, we're done.
+  if (S.NSValueLiteralMethods[*Kind])
+    return S.NSValueLiteralMethods[*Kind];
+  
+  Selector Sel = S.NSAPIObj->getNSValueLiteralSelector(*Kind);
+  
+  ASTContext &CX = S.Context;
+  
+  // Look up the NSValue class, if we haven't done so already. It's cached
+  // in the Sema instance.
+  if (!S.NSValueDecl) {
+    IdentifierInfo *NSValueId =
+    S.NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
+    NamedDecl *IF = S.LookupSingleName(S.TUScope, NSValueId,
+                                       Loc, Sema::LookupOrdinaryName);
+    S.NSValueDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+    if (!S.NSValueDecl) {
+      if (S.getLangOpts().DebuggerObjCLiteral) {
+        // Create a stub definition of NSValue.
+        S.NSValueDecl = ObjCInterfaceDecl::Create(CX,
+                                                  CX.getTranslationUnitDecl(),
+                                                  SourceLocation(), NSValueId,
+                                                  nullptr, SourceLocation());
+      } else {
+        // Otherwise, require a declaration of NSValue.
+        S.Diag(Loc, diag::err_undeclared_nsvalue);
+        return nullptr;
+      }
+    } else if (!S.NSValueDecl->hasDefinition()) {
+      S.Diag(Loc, diag::err_undeclared_nsvalue);
+      return nullptr;
+    }
+    
+    // generate the pointer to NSValue type.
+    QualType NSValueObject = CX.getObjCInterfaceType(S.NSValueDecl);
+    S.NSValuePointer = CX.getObjCObjectPointerType(NSValueObject);
+  }
+  
+  // Look for the appropriate method within NSValue.
+  ObjCMethodDecl *Method = S.NSValueDecl->lookupClassMethod(Sel);
+  if (!Method && S.getLangOpts().DebuggerObjCLiteral) {
+    // create a stub definition this NSValue factory method.
+    TypeSourceInfo *ReturnTInfo = nullptr;
+    Method =
+    ObjCMethodDecl::Create(CX, SourceLocation(), SourceLocation(), Sel,
+                           S.NSValuePointer, ReturnTInfo, S.NSValueDecl,
+                           /*isInstance=*/false, /*isVariadic=*/false,
+                           /*isPropertyAccessor=*/false,
+                           /*isImplicitlyDeclared=*/true,
+                           /*isDefined=*/false, ObjCMethodDecl::Required,
+                           /*HasRelatedResultType=*/false);
+    ParmVarDecl *value = ParmVarDecl::Create(S.Context, Method,
+                                             SourceLocation(), SourceLocation(),
+                                             &CX.Idents.get("value"),
+                                             ValueType, /*TInfo=*/nullptr,
+                                             SC_None, nullptr);
+    Method->setMethodParams(S.Context, value, None);
+  }
+  
+  if (!validateBoxingMethod(S, Loc, S.NSValueDecl, Sel, Method))
+    return nullptr;
+  
+  // Note: if the parameter type is out-of-line, we'll catch it later in the
+  // implicit conversion.
+  
+  S.NSValueLiteralMethods[*Kind] = Method;
+  return Method;
+}
+
 /// BuildObjCNumericLiteral - builds an ObjCBoxedExpr AST node for the
 /// numeric literal expression. Type of the expression will be "NSNumber *".
 ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
@@ -527,10 +613,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       BoxedType = NSStringPointer;
     }
   } else if (ValueType->isBuiltinType()) {
-    // The other types we support are numeric, char and BOOL/bool. We could also
-    // provide limited support for structure types, such as NSRange, NSRect, and
-    // NSSize. See NSValue (NSValueGeometryExtensions) in <Foundation/NSGeometry.h>
-    // for more details.
+    // The other types we support are numeric, char and BOOL/bool.
 
     // Check for a top-level character literal.
     if (const CharacterLiteral *Char =
@@ -562,6 +645,15 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
     BoxedType = NSNumberPointer;
 
+  } else if (ValueType->isStructureType()) {
+    // Limited support for structure types, such as NSRange,
+    // NSRect, and NSSize. See NSValue (NSValueGeometryExtensions)
+    // in <Foundation/NSGeometry.h> for more details.
+      
+    // Look for the appropriate method within NSValue.
+    BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
+    BoxedType = NSValuePointer;
+    
   } else if (const EnumType *ET = ValueType->getAs<EnumType>()) {
     if (!ET->getDecl()->isComplete()) {
       Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)

@@ -33,9 +33,10 @@ public:
     ClassId_NSMutableArray,
     ClassId_NSDictionary,
     ClassId_NSMutableDictionary,
-    ClassId_NSNumber
+    ClassId_NSNumber,
+    ClassId_NSValue
   };
-  static const unsigned NumClassIds = 7;
+  static const unsigned NumClassIds = 8;
 
   enum NSStringMethodKind {
     NSStr_stringWithString,
@@ -158,11 +159,26 @@ public:
   };
   static const unsigned NumNSNumberLiteralMethods = 15;
 
+  /// \brief Enumerates the NSValue methods used to generate literals.
+  enum NSValueLiteralMethodKind {
+    NSValueWithPoint,
+    NSValueWithSize,
+    NSValueWithRect,
+    NSValueWithCGPoint,
+    NSValueWithCGSize,
+    NSValueWithCGRect,
+    NSValueWithRange
+  };
+  static const unsigned NumNSValueLiteralMethods = 7;
+  
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   /// \param Instance if true it will return the selector for the init* method
   /// otherwise it will return the selector for the number* method.
   Selector getNSNumberLiteralSelector(NSNumberLiteralMethodKind MK,
                                       bool Instance) const;
+  
+  /// \brief The Objective-C NSValue selectors used to create NSValue literals.
+  Selector getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const;
 
   bool isNSNumberLiteralSelector(NSNumberLiteralMethodKind MK,
                                  Selector Sel) const {
@@ -178,6 +194,11 @@ public:
   /// literal of the given type.
   Optional<NSNumberLiteralMethodKind>
       getNSNumberFactoryMethodKind(QualType T) const;
+  
+  /// \brief Determine the appropriate NSValue factory method kind for a
+  /// literal of the given type.
+  Optional<NSValueLiteralMethodKind>
+      getNSValueFactoryMethodKind(QualType T) const;
 
   /// \brief Returns true if \param T is a typedef of "BOOL" in objective-c.
   bool isObjCBOOLType(QualType T) const;
@@ -185,12 +206,27 @@ public:
   bool isObjCNSIntegerType(QualType T) const;
   /// \brief Returns true if \param T is a typedef of "NSUInteger" in objective-c.
   bool isObjCNSUIntegerType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "NSPoint" in objective-c.
+  bool isObjCNSPointType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "NSSize" in objective-c.
+  bool isObjCNSSizeType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "NSRect" in objective-c.
+  bool isObjCNSRectType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "CGPoint" in objective-c.
+  bool isObjCCGPointType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "CGSize" in objective-c.
+  bool isObjCCGSizeType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "CGRect" in objective-c.
+  bool isObjCCGRectType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "NSRange" in objective-c.
+  bool isObjCNSRangeType(QualType T) const;
   /// \brief Returns one of NSIntegral typedef names if \param T is a typedef
   /// of that name in objective-c.
   StringRef GetNSIntegralKind(QualType T) const;
 
 private:
   bool isObjCTypedef(QualType T, StringRef name, IdentifierInfo *&II) const;
+  bool isObjCStructure(QualType T, StringRef name) const;
   bool isObjCEnumerator(const Expr *E,
                         StringRef name, IdentifierInfo *&II) const;
   Selector getOrInitSelector(ArrayRef<StringRef> Ids, Selector &Sel) const;
@@ -210,6 +246,9 @@ private:
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   mutable Selector NSNumberClassSelectors[NumNSNumberLiteralMethods];
   mutable Selector NSNumberInstanceSelectors[NumNSNumberLiteralMethods];
+  
+  /// \brief The Objective-C NSValue selectors used to create NSValue literals.
+  mutable Selector NSValueClassSelectors[NumNSValueLiteralMethods];
 
   mutable Selector objectForKeyedSubscriptSel, objectAtIndexedSubscriptSel,
                    setObjectForKeyedSubscriptSel,setObjectAtIndexedSubscriptSel,
@@ -217,6 +256,9 @@ private:
 
   mutable IdentifierInfo *BOOLId, *NSIntegerId, *NSUIntegerId;
   mutable IdentifierInfo *NSASCIIStringEncodingId, *NSUTF8StringEncodingId;
+  mutable IdentifierInfo *NSPointId, *NSSizeId, *NSRectId;
+  mutable IdentifierInfo *CGPointId, *CGSizeId, *CGRectId;
+  mutable IdentifierInfo *NSRangeId;
 };
 
 }  // end namespace clang
