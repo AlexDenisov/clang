@@ -120,7 +120,8 @@ Objective-C provides a new syntax for boxing C expressions:
     @( <expression> )
 
 Expressions of scalar (numeric, enumerated, BOOL) and C string pointer
-types are supported:
+types are supported, as well as some NSFoundation C structures 
+(e.g. ``NSPoint``, ``NSRect``, etc.):
 
 .. code-block:: objc
 
@@ -135,6 +136,10 @@ types are supported:
     // strings.
     NSString *path = @(getenv("PATH"));       // [NSString stringWithUTF8String:(getenv("PATH"))]
     NSArray *pathComponents = [path componentsSeparatedByString:@":"];
+
+    // NS structs
+    NSValue *center = @(view.center);         // [NSValue valueWithPoint:view.center]
+    NSValue *frame = @(view.frame);           // [NSValue valueWithRect:view.frame]
 
 Boxed Enums
 -----------
@@ -217,6 +222,24 @@ arbitrary pointer arithmetic, therefore programmers must ensure that the
 character data is valid. Passing ``NULL`` as the character pointer will
 raise an exception at runtime. When possible, the compiler will reject
 ``NULL`` character pointers used in boxed expressions.
+
+Boxed C Structures
+------------------
+
+Some C structures might be boxed into a NSValue using corresponding class' 
+methods:
+
+.. code-block:: objc
+
+    NSPoint p;
+    NSValue *point = @(p);    // valueWithPoint
+    NSSize s;
+    NSValue *size = @(s);     // valueWithSize
+
+Full list of available types if programmer targets:
+
+  - OSX: ``NSPoint``, ``NSSize``, ``NSRect``, ``NSRange``
+  - iOS: ``CGPoint``, ``CGSize``, ``CGRect``, ``NSRange``
 
 Container Literals
 ==================
