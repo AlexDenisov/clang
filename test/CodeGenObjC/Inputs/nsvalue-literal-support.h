@@ -37,11 +37,10 @@ typedef struct _NSRange {
 + (NSValue *)valueWithSize:(NSSize)size;
 + (NSValue *)valueWithRect:(NSRect)rect;
 
-/*/ iOS specific
-+ (NSValue *)valueWithCGPoint:(CGPoint)point;
-+ (NSValue *)valueWithCGSize:(CGSize)size;
-+ (NSValue *)valueWithCGRect:(CGRect)rect;
-*/
+// iOS specific
+//+ (NSValue *)valueWithCGPoint:(CGPoint)point;
+//+ (NSValue *)valueWithCGSize:(CGSize)size;
+//+ (NSValue *)valueWithCGRect:(CGRect)rect;
 @end
 
 #endif // OBJC_NSVALUE_LITERAL_SUPPORT_H
