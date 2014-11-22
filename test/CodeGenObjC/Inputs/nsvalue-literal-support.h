@@ -1,13 +1,15 @@
 #ifndef OBJC_NSVALUE_LITERAL_SUPPORT_H
 #define OBJC_NSVALUE_LITERAL_SUPPORT_H
 
-#if __LP64__ || (TARGET_OS_EMBEDDED && !TARGET_OS_IPHONE) || TARGET_OS_WIN32 || NS_BUILD_32_LIKE_64
 typedef unsigned long NSUInteger;
 typedef double CGFloat;
-#else
-typedef unsigned int NSUInteger;
-typedef float CGFloat;
-#endif
+
+typedef struct _NSRange {
+    NSUInteger location;
+    NSUInteger length;
+} NSRange;
+
+// OS X Specific
 
 typedef struct _NSPoint {
     CGFloat x;
@@ -24,23 +26,38 @@ typedef struct _NSRect {
     NSSize size;
 } NSRect;
 
-typedef struct _NSRange {
-    NSUInteger location;
-    NSUInteger length;
-} NSRange;
+// iOS Specific
+
+struct CGPoint {
+  CGFloat x;
+  CGFloat y;
+};
+typedef struct CGPoint CGPoint;
+
+struct CGSize {
+  CGFloat width;
+  CGFloat height;
+};
+typedef struct CGSize CGSize;
+
+struct CGRect {
+  CGPoint origin;
+  CGSize size;
+};
+typedef struct CGRect CGRect;
 
 @interface NSValue
 + (NSValue *)valueWithRange:(NSRange)range;
 
-// OS X specific
+// OS X Specific
 + (NSValue *)valueWithPoint:(NSPoint)point;
 + (NSValue *)valueWithSize:(NSSize)size;
 + (NSValue *)valueWithRect:(NSRect)rect;
 
-// iOS specific
-//+ (NSValue *)valueWithCGPoint:(CGPoint)point;
-//+ (NSValue *)valueWithCGSize:(CGSize)size;
-//+ (NSValue *)valueWithCGRect:(CGRect)rect;
+// iOS Specific
++ (NSValue *)valueWithCGPoint:(CGPoint)point;
++ (NSValue *)valueWithCGSize:(CGSize)size;
++ (NSValue *)valueWithCGRect:(CGRect)rect;
 @end
 
 #endif // OBJC_NSVALUE_LITERAL_SUPPORT_H
