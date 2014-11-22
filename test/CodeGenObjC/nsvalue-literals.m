@@ -9,6 +9,10 @@
 // CHECK-NEXT: [[POINT_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
 // CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithSize:{{.*}}
 // CHECK-NEXT: [[SIZE_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithRect:{{.*}}
+// CHECK-NEXT: [[RECT_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithRange:{{.*}}
+// CHECK-NEXT: [[RANGE_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
 
 // CHECK-LABEL: define void @doPoint()
 void doPoint() {
@@ -24,7 +28,7 @@ void doPoint() {
   NSPoint ns_point = { .x = 42, .y = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], double [[P1]], double [[P2]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
-  NSValue *point = [NSValue valueWithPoint:ns_point];
+  NSValue *point = @(ns_point);
   // CHECK:      call void @objc_release
   // CHECK-NEXT: ret void
 }
@@ -43,22 +47,43 @@ void doSize() {
   NSSize ns_size = { .width = 42, .height = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], double [[P1]], double [[P2]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
-  NSValue *size = [NSValue valueWithSize:ns_size];
+  NSValue *size = @(ns_size);
   // CHECK:      call void @objc_release
   // CHECK-NEXT: ret void
 }
 
-
-/*void doStuff() {
+// CHECK-LABEL: define void @doRect()
+void doRect() {
+  // CHECK:      [[RECT:%.*]]     = alloca %struct._NSRect{{.*}}
+  // CHECK:      [[RECV_PTR:%.*]] = load {{.*}} [[NSVALUE]]
+  // CHECK:      [[SEL:%.*]]      = load i8** [[RECT_SEL]]
+  // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
   NSPoint ns_point = { .x = 42, .y = 24 };
-  
-  NSSize ns_size = { .width = 33, .height = 44 };
-  NSValue *size = [NSValue valueWithSize:ns_size];
-
+  NSSize ns_size = { .width = 42, .height = 24 };
   NSRect ns_rect = { .origin = ns_point, .size = ns_size };
-  NSValue *rect = [NSValue valueWithRect:ns_rect];
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct._NSRect* byval align 8 [[RECT]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
+  NSValue *rect = @(ns_rect);
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
+}
 
-  NSRange ns_range = { .location = 0, .length = 14 };
-  NSValue *range = [NSValue valueWithRange:ns_range];
-}*/
+// CHECK-LABEL: define void @doRange()
+void doRange() {
+  // CHECK:      [[RANGE:%.*]]     = bitcast %struct._NSRange* {{.*}}
+  // CHECK:      [[RECV_PTR:%.*]]  = load {{.*}} [[NSVALUE]]
+  // CHECK:      [[SEL:%.*]]       = load i8** [[RANGE_SEL]]
+  // CHECK:      [[RECV:%.*]]      = bitcast %struct._class_t* [[RECV_PTR]] to i8*
+  // CHECK:      [[RANGE_PTR:%.*]] = bitcast %struct._NSRange* {{.*}}
+  // CHECK-NEXT: [[P1_PTR:%.*]]    = getelementptr {{.*}} [[RANGE_PTR]], i32 0, i32 0
+  // CHECK-NEXT: [[P1:%.*]]        = load i64* [[P1_PTR]], align 1
+  // CHECK-NEXT: [[P2_PTR:%.*]]    = getelementptr {{.*}} [[RANGE_PTR]], i32 0, i32 1
+  // CHECK-NEXT: [[P2:%.*]]        = load i64* [[P2_PTR]], align 1
+  NSRange ns_range = { .location = 0, .length = 42 };
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i64 [[P1]], i64 [[P2]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
+  NSValue *range = @(ns_range);
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
+}
 

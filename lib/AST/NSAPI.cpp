@@ -388,12 +388,10 @@ Selector NSAPI::getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const {
     "valueWithRange",
   };
   
-  Selector *Sels = NSValueClassSelectors;
-  const char **Names = ClassSelectorName;
-  
-  if (Sels[MK].isNull())
-    Sels[MK] = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get(Names[MK]));
-  return Sels[MK];
+  if (NSValueClassSelectors[MK].isNull())
+    NSValueClassSelectors[MK] =
+      Ctx.Selectors.getUnarySelector(&Ctx.Idents.get(ClassSelectorName[MK]));
+  return NSValueClassSelectors[MK];
 }
 
 Optional<NSAPI::NSNumberLiteralMethodKind>
