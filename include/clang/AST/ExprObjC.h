@@ -124,9 +124,9 @@ public:
   
   // Iterators
   child_range children() { return child_range(&SubExpr, &SubExpr+1); }
-
+ 
   typedef ConstExprIterator const_arg_iterator;
-
+  
   const_arg_iterator arg_begin() const {
     return reinterpret_cast<Stmt const * const*>(&SubExpr);
   }
