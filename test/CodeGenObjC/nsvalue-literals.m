@@ -90,7 +90,7 @@ void doRect() {
   NSPoint ns_point = { .x = 42, .y = 24 };
   NSSize ns_size = { .width = 42, .height = 24 };
   NSRect ns_rect = { .origin = ns_point, .size = ns_size };
-  // -CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct._NSRect* byval align 8 [[RECT]])
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct._NSRect* byval align 8 [[RECT]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(ns_rect);
   // CHECK:      call void @objc_release
@@ -145,7 +145,7 @@ void doCGRect() {
   CGPoint cg_point = { .x = 42, .y = 24 };
   CGSize cg_size = { .width = 42, .height = 24 };
   CGRect cg_rect = { .origin = cg_point, .size = cg_size };
-  // -CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct.CGRect* byval align 8 [[RECT]])
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct.CGRect* byval align 8 [[RECT]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(cg_rect);
   // CHECK:      call void @objc_release
