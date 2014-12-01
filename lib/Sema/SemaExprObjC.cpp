@@ -258,17 +258,11 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
 /// \brief Retrieve the NSValue factory method that should be used to create
 /// an Objective-C literal for the given type.
 static ObjCMethodDecl *getNSValueFactoryMethod(Sema &S, SourceLocation Loc,
-                                               QualType ValueType,
-                                               bool isLiteral = false,
-                                               SourceRange R = SourceRange()) {
+                                               QualType ValueType) {
   Optional<NSAPI::NSValueLiteralMethodKind> Kind =
   S.NSAPIObj->getNSValueFactoryMethodKind(ValueType);
   
   if (!Kind) {
-    if (isLiteral) {
-      S.Diag(Loc, diag::err_invalid_nsvalue_type)
-      << ValueType << R;
-    }
     return nullptr;
   }
   
