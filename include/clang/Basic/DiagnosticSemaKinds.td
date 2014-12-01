@@ -2045,8 +2045,6 @@ def err_undeclared_nsvalue : Error<
   "NSValue must be available to use Objective-C literals">;
 def err_invalid_nsnumber_type : Error<
   "%0 is not a valid literal type for NSNumber">;
-def err_invalid_nsvalue_type : Error<
-  "%0 is not a valid literal type for NSValue">;
 def err_undeclared_nsstring : Error<
   "cannot box a string value because NSString has not been declared">;
 def err_objc_illegal_boxed_expression_type : Error<
