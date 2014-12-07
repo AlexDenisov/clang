@@ -1,12 +1,12 @@
 // RUN: %clang_cc1 -I %S/Inputs -triple x86_64-apple-darwin10 -emit-llvm -fblocks -fobjc-arc -fobjc-runtime-has-weak -O2 -disable-llvm-optzns -o - %s | FileCheck %s
 
-#import "nsvalue-literal-support.h"
+#import "nsvalue-boxed-expressions-support.h"
 
-// CHECK:      [[CLASS:@.*]]      = external global %struct._class_t
-// CHECK:      [[NSVALUE:@.*]]    = {{.*}}[[CLASS]]{{.*}}
-//
-// CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithRange:{{.*}}
-// CHECK-NEXT: [[RANGE_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[CLASS:@.*]]        = external global %struct._class_t
+// CHECK:      [[NSVALUE:@.*]]      = {{.*}}[[CLASS]]{{.*}}
+
+// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithRange:{{.*}}
+// CHECK-NEXT: [[RANGE_SEL:@.*]]    = {{.*}}[[METH]]{{.*}}
 
 // OS X Specific
 // CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithPoint:{{.*}}
@@ -23,6 +23,9 @@
 // CHECK-NEXT: [[CGSIZE_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
 // CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithCGRect:{{.*}}
 // CHECK-NEXT: [[CGRECT_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
+
+// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPointer:{{.*}}
+// CHECK-NEXT: [[POINTER_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
 
 // CHECK-LABEL: define void @doRange()
 void doRange() {
@@ -148,6 +151,21 @@ void doCGRect() {
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct.CGRect* byval align 8 [[RECT]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(cg_rect);
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
+}
+
+// CHECK-LABEL: define void @doVoidPointer()
+void doVoidPointer() {
+  // CHECK:      [[POINTER:%.*]]  = alloca i8*{{.*}}
+  // CHECK:      [[RECV_PTR:%.*]] = load {{.*}} [[NSVALUE]]
+  // CHECK:      [[PARAM:%.*]]    = load i8** [[POINTER]]
+  // CHECK:      [[SEL:%.*]]      = load i8** [[POINTER_SEL]]
+  // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
+  const void *pointer = 0;
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
+  NSValue *value = @(pointer);
   // CHECK:      call void @objc_release
   // CHECK-NEXT: ret void
 }

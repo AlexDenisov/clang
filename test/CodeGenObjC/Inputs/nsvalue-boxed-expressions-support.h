@@ -58,6 +58,8 @@ typedef struct CGRect CGRect;
 + (NSValue *)valueWithCGPoint:(CGPoint)point;
 + (NSValue *)valueWithCGSize:(CGSize)size;
 + (NSValue *)valueWithCGRect:(CGRect)rect;
+
++ (NSValue *)valueWithPointer:(const void *)pointer;
 @end
 
 #endif // OBJC_NSVALUE_LITERAL_SUPPORT_H
