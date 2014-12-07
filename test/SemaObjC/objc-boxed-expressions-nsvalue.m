@@ -83,4 +83,3 @@ int main() {
   SomeStruct s;
   id err = @(s); // expected-error{{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}
 }
-

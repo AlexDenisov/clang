@@ -389,7 +389,7 @@ Selector NSAPI::getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const {
     "valueWithPointer",
     "valueWithNonretainedObject"
   };
-  
+
   if (NSValueClassSelectors[MK].isNull())
     NSValueClassSelectors[MK] =
       Ctx.Selectors.getUnarySelector(&Ctx.Idents.get(ClassSelectorName[MK]));
@@ -512,7 +512,7 @@ NSAPI::getNSValueFactoryMethodKind(QualType T) const {
     return NSAPI::NSValueWithPointer;
   if (T->isObjCObjectPointerType())
     return NSAPI::NSValueWithNonretainedObject;
-  
+
   return None;
 }
 

@@ -646,13 +646,13 @@ public:
 
   /// \brief Pointer to NSNumber type (NSNumber *).
   QualType NSNumberPointer;
-    
+
   /// \brief Pointer to NSValue type (NSValue *).
   QualType NSValuePointer;
 
   /// \brief The Objective-C NSNumber methods used to create NSNumber literals.
   ObjCMethodDecl *NSNumberLiteralMethods[NSAPI::NumNSNumberLiteralMethods];
-  
+
   /// \brief The Objective-C NSValue methods used to create NSValue literals.
   ObjCMethodDecl *NSValueLiteralMethods[NSAPI::NumNSValueLiteralMethods];
 

@@ -199,13 +199,13 @@ public:
     NSValueWithNonretainedObject
   };
   static const unsigned NumNSValueLiteralMethods = 9;
-  
+
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   /// \param Instance if true it will return the selector for the init* method
   /// otherwise it will return the selector for the number* method.
   Selector getNSNumberLiteralSelector(NSNumberLiteralMethodKind MK,
                                       bool Instance) const;
-  
+
   /// \brief The Objective-C NSValue selectors used to create NSValue literals.
   Selector getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const;
 
@@ -223,7 +223,7 @@ public:
   /// literal of the given type.
   Optional<NSNumberLiteralMethodKind>
       getNSNumberFactoryMethodKind(QualType T) const;
-  
+
   /// \brief Determine the appropriate NSValue factory method kind for a
   /// literal of the given type.
   Optional<NSValueLiteralMethodKind>
@@ -277,7 +277,7 @@ private:
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   mutable Selector NSNumberClassSelectors[NumNSNumberLiteralMethods];
   mutable Selector NSNumberInstanceSelectors[NumNSNumberLiteralMethods];
-  
+
   /// \brief The Objective-C NSValue selectors used to create NSValue literals.
   mutable Selector NSValueClassSelectors[NumNSValueLiteralMethods];
 
