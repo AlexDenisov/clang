@@ -119,9 +119,8 @@ Objective-C provides a new syntax for boxing C expressions:
 
     @( <expression> )
 
-Expressions of scalar (numeric, enumerated, BOOL) and C string pointer
-types are supported, as well as some NSFoundation C structures 
-(e.g. ``NSPoint``, ``NSRect``, etc.):
+Expressions of scalar (numeric, enumerated, BOOL), C string pointer
+and NSValue constructible types are supported:
 
 .. code-block:: objc
 
@@ -140,6 +139,14 @@ types are supported, as well as some NSFoundation C structures
     // NS structs
     NSValue *center = @(view.center);         // [NSValue valueWithPoint:view.center]
     NSValue *frame = @(view.frame);           // [NSValue valueWithRect:view.frame]
+
+    // Pointers
+    NSValue *memObject = @( malloc(42) );     // [NSValue valueWithPointer:malloc(42)]
+
+    // Objective-C objects
+    id obj = [NSObject new];
+    NSValue *nonretainedObject = @(obj);      // [NSValue valueWithNonretainedObject:obj]
+    NSValue *nonretainedString = @(@"Hello"); // [NSValue valueWithNonretainedObject:@"Hello"]
 
 Boxed Enums
 -----------
@@ -223,20 +230,24 @@ character data is valid. Passing ``NULL`` as the character pointer will
 raise an exception at runtime. When possible, the compiler will reject
 ``NULL`` character pointers used in boxed expressions.
 
-Boxed C Structures
+Boxed C Strucutres, pointers and NSObjects
 ------------------
 
-Some C structures might be boxed into a NSValue using corresponding class' 
-methods:
+Boxed expressions support construction of NSValue objects.
+It said that some C structures, pointers and NSObjects can be used:
 
 .. code-block:: objc
 
     NSPoint p;
-    NSValue *point = @(p);    // valueWithPoint
+    NSValue *point = @(p);          // valueWithPoint:
     NSSize s;
-    NSValue *size = @(s);     // valueWithSize
+    NSValue *size = @(s);           // valueWithSize:
+    const void *p = malloc(42);
+    NSValue *memory = @(p);         // valueWithPointer:
+    id obj = [NSObject new];
+    NSValue *nonretained = @(obj);  // valueWithNonretainedObject:
 
-Full list of available types if programmer targets:
+The following list of structs supported, depends on target system:
 
   - OSX: ``NSPoint``, ``NSSize``, ``NSRect``, ``NSRange``
   - iOS: ``CGPoint``, ``CGSize``, ``CGRect``, ``NSRange``
