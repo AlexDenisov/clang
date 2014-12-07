@@ -60,6 +60,7 @@ typedef struct CGRect CGRect;
 + (NSValue *)valueWithCGRect:(CGRect)rect;
 
 + (NSValue *)valueWithPointer:(const void *)pointer;
++ (NSValue *)valueWithNonretainedObject:(id)object;
 @end
 
 #endif // OBJC_NSVALUE_LITERAL_SUPPORT_H

@@ -9,12 +9,12 @@
 // CHECK-NEXT: [[RANGE_SEL:@.*]]    = {{.*}}[[METH]]{{.*}}
 
 // OS X Specific
-// CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithPoint:{{.*}}
-// CHECK-NEXT: [[POINT_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithSize:{{.*}}
-// CHECK-NEXT: [[SIZE_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]       = private global{{.*}}valueWithRect:{{.*}}
-// CHECK-NEXT: [[RECT_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPoint:{{.*}}
+// CHECK-NEXT: [[POINT_SEL:@.*]]    = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithSize:{{.*}}
+// CHECK-NEXT: [[SIZE_SEL:@.*]]     = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithRect:{{.*}}
+// CHECK-NEXT: [[RECT_SEL:@.*]]     = {{.*}}[[METH]]{{.*}}
 
 // iOS Specfific
 // CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithCGPoint:{{.*}}
@@ -26,6 +26,9 @@
 
 // CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPointer:{{.*}}
 // CHECK-NEXT: [[POINTER_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
+
+// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithNonretainedObject:{{.*}}
+// CHECK-NEXT: [[NONRET_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
 
 // CHECK-LABEL: define void @doRange()
 void doRange() {
@@ -166,6 +169,22 @@ void doVoidPointer() {
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *value = @(pointer);
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
+}
+
+// CHECK-LABEL: define void @doNonretainedObject()
+void doNonretainedObject() {
+  // CHECK:      [[OBJ:%.*]]      = alloca i8*{{.*}}
+  // CHECK:      [[RECV_PTR:%.*]] = load {{.*}} [[NSVALUE]]
+  // CHECK:      [[PARAM:%.*]]    = load i8** [[OBJ]]
+  // CHECK:      [[SEL:%.*]]      = load i8** [[NONRET_SEL]]
+  // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
+  id obj;
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
+  NSValue *object = @(obj);
+  // CHECK:      call void @objc_release
   // CHECK:      call void @objc_release
   // CHECK-NEXT: ret void
 }
