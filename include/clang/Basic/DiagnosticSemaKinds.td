@@ -2058,7 +2058,7 @@ def err_attr_objc_ownership_redundant : Error<
 def err_undeclared_nsnumber : Error<
   "NSNumber must be available to use Objective-C literals">;
 def err_undeclared_nsvalue : Error<
-  "NSValue must be available to use Objective-C literals">;
+  "NSValue must be available to use Objective-C boxed expressions">;
 def err_invalid_nsnumber_type : Error<
   "%0 is not a valid literal type for NSNumber">;
 def err_undeclared_nsstring : Error<

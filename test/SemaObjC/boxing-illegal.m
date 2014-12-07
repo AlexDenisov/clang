@@ -4,6 +4,8 @@ typedef long NSInteger;
 typedef unsigned long NSUInteger;
 typedef signed char BOOL;
 
+@interface NSValue @end
+
 @interface NSNumber
 @end
 @interface NSNumber (NSNumberCreation)
@@ -34,8 +36,8 @@ void testStruct() {
 }
 
 void testPointers() {
-    void *null = 0;
-    id boxed_null = @(null);        // expected-error {{illegal type 'void *' used in a boxed expression}}
+    float *null = 0;
+    id boxed_null = @(null);        // expected-error {{illegal type 'float *' used in a boxed expression}}
     int numbers[] = { 0, 1, 2 };
     id boxed_numbers = @(numbers);  // expected-error {{illegal type 'int *' used in a boxed expression}}
 }

@@ -32,6 +32,8 @@ typedef struct _SomeStruct {
   double d;
 } SomeStruct;
 
+@interface NSObject @end
+
 @interface NSValue
 + (NSValue *)valueWithPoint:(NSPoint)point;
 + (NSValue *)valueWithSize:(NSSize)size;
@@ -42,29 +44,41 @@ typedef struct _SomeStruct {
 + (NSValue *)valueWithCGRect:(CGRect)rect;
 
 + (NSValue *)valueWithRange:(NSRange)range;
+
++ (NSValue *)valueWithPointer:(const void *)pinter;
++ (NSValue *)valueWithNonretainedObject:(id)anObject;
 @end
 
 int main() {
-  NSPoint p;
-  id point = @(p); // no-warning
+  NSPoint ns_point;
+  id ns_point_value = @(ns_point);
 
-  NSSize sz;
-  id size = @(sz); // no-warning
+  NSSize ns_size;
+  id ns_size_value = @(ns_size);
 
-  NSRect re;
-  id rect = @(re); // no-warning
+  NSRect ns_rect;
+  id ns_rect_value = @(ns_rect);
 
-  CGPoint cgp;
-  id cgpoint = @(cgp); // no-warning
+  CGPoint cg_point;
+  id cg_point_value = @(cg_point);
 
-  CGSize cgsz;
-  id cgsize = @(cgsz); // no-warning
+  CGSize cg_size;
+  id cg_size_value = @(cg_size);
 
-  CGRect cgre;
-  id cgrect = @(cgre); // no-warning
+  CGRect cg_rect;
+  id cg_rect_value = @(cg_rect);
 
-  NSRange rn;
-  id range = @(rn); // no-warning
+  NSRange ns_range;
+  id ns_range_value = @(ns_range);
+
+  const void *void_pointer;
+  id void_pointer_value = @(void_pointer);
+
+  id id_object;
+  id id_object_value = @(id_object);
+
+  NSObject *ns_object;
+  id ns_object_value = @(ns_object);
 
   SomeStruct s;
   id err = @(s); // expected-error{{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}

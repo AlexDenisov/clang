@@ -538,10 +538,55 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   }
   ValueExpr = RValue.get();
   QualType ValueType(ValueExpr->getType());
-  if (const PointerType *PT = ValueType->getAs<PointerType>()) {
-    QualType PointeeType = PT->getPointeeType();
-    if (Context.hasSameUnqualifiedType(PointeeType, Context.CharTy)) {
+  if (ValueType->isBuiltinType() || ValueType->isEnumeralType()) {
+    // We support numeric, char and BOOL/bool types.
+    // Check for a top-level character literal.
+    if (const CharacterLiteral *Char =
+        dyn_cast<CharacterLiteral>(ValueExpr->IgnoreParens())) {
+      // In C, character literals have type 'int'. That's not the type we want
+      // to use to determine the Objective-c literal kind.
+      switch (Char->getKind()) {
+      case CharacterLiteral::Ascii:
+        ValueType = Context.CharTy;
+        break;
+        
+      case CharacterLiteral::Wide:
+        ValueType = Context.getWideCharType();
+        break;
+        
+      case CharacterLiteral::UTF16:
+        ValueType = Context.Char16Ty;
+        break;
+        
+      case CharacterLiteral::UTF32:
+        ValueType = Context.Char32Ty;
+        break;
+      }
+    }
+    
+    if (const EnumType *ET = ValueType->getAs<EnumType>()) {
+      if (!ET->getDecl()->isComplete()) {
+        Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)
+        << ValueType << ValueExpr->getSourceRange();
+        return ExprError();
+      }
+      
+      ValueType = ET->getDecl()->getIntegerType();
+    }
+    
+    CheckForIntOverflow(ValueExpr);
+    // FIXME:  Do I need to do anything special with BoolTy expressions?
+    
+    // Look for the appropriate method within NSNumber.
+    BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
+    BoxedType = NSNumberPointer;
 
+  } else if (ValueType->isStructureType() || ValueType->isPointerType() || ValueType->isObjCObjectPointerType()) {
+    // Support of NSValue and NSString construction
+    
+    // Check if we can construct NSString from chars
+    const PointerType *PT = ValueType->getAs<PointerType>();
+    if (PT && Context.hasSameUnqualifiedType(PT->getPointeeType(), Context.CharTy)) {
       if (!NSStringDecl) {
         IdentifierInfo *NSStringId =
           NSAPIObj->getNSClassId(NSAPI::ClassId_NSString);
@@ -572,7 +617,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       if (!StringWithUTF8StringMethod) {
         IdentifierInfo *II = &Context.Idents.get("stringWithUTF8String");
         Selector stringWithUTF8String = Context.Selectors.getUnarySelector(II);
-
+        
         // Look for the appropriate method within NSString.
         BoxingMethod = NSStringDecl->lookupClassMethod(stringWithUTF8String);
         if (!BoxingMethod && getLangOpts().DebuggerObjCLiteral) {
@@ -597,69 +642,25 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
           M->setMethodParams(Context, value, None);
           BoxingMethod = M;
         }
-
+        
         if (!validateBoxingMethod(*this, SR.getBegin(), NSStringDecl,
                                   stringWithUTF8String, BoxingMethod))
-           return ExprError();
-
+          return ExprError();
+        
         StringWithUTF8StringMethod = BoxingMethod;
       }
       
       BoxingMethod = StringWithUTF8StringMethod;
       BoxedType = NSStringPointer;
-    }
-  } else if (ValueType->isBuiltinType()) {
-    // The other types we support are numeric, char and BOOL/bool.
-
-    // Check for a top-level character literal.
-    if (const CharacterLiteral *Char =
-        dyn_cast<CharacterLiteral>(ValueExpr->IgnoreParens())) {
-      // In C, character literals have type 'int'. That's not the type we want
-      // to use to determine the Objective-c literal kind.
-      switch (Char->getKind()) {
-      case CharacterLiteral::Ascii:
-        ValueType = Context.CharTy;
-        break;
-        
-      case CharacterLiteral::Wide:
-        ValueType = Context.getWideCharType();
-        break;
-        
-      case CharacterLiteral::UTF16:
-        ValueType = Context.Char16Ty;
-        break;
-        
-      case CharacterLiteral::UTF32:
-        ValueType = Context.Char32Ty;
-        break;
-      }
-    }
-    CheckForIntOverflow(ValueExpr);
-    // FIXME:  Do I need to do anything special with BoolTy expressions?
-    
-    // Look for the appropriate method within NSNumber.
-    BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
-    BoxedType = NSNumberPointer;
-
-  } else if (ValueType->isStructureType()) {
-    // Limited support for structure types, such as NSRange,
-    // NSRect, and NSSize. See NSValue (NSValueGeometryExtensions)
-    // in <Foundation/NSGeometry.h> for more details.
+    } else {
+      // Support for +valueWithNonretaintedObject and +valueWithPointer.
+      // Limited support for structure types, such as NSRange,
+      // NS/CG Rect, Size and Point.
       
-    // Look for the appropriate method within NSValue.
-    BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
-    BoxedType = NSValuePointer;
-    
-  } else if (const EnumType *ET = ValueType->getAs<EnumType>()) {
-    if (!ET->getDecl()->isComplete()) {
-      Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)
-        << ValueType << ValueExpr->getSourceRange();
-      return ExprError();
+      // Look for the appropriate method within NSValue.
+      BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
+      BoxedType = NSValuePointer;
     }
-
-    BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(),
-                                            ET->getDecl()->getIntegerType());
-    BoxedType = NSNumberPointer;
   }
 
   if (!BoxingMethod) {
