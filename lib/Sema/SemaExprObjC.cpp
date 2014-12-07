@@ -263,19 +263,19 @@ static ObjCMethodDecl *getNSValueFactoryMethod(Sema &S, SourceLocation Loc,
                                                QualType ValueType) {
   Optional<NSAPI::NSValueLiteralMethodKind> Kind =
   S.NSAPIObj->getNSValueFactoryMethodKind(ValueType);
-  
+
   if (!Kind) {
     return nullptr;
   }
-  
+
   // If we already looked up this method, we're done.
   if (S.NSValueLiteralMethods[*Kind])
     return S.NSValueLiteralMethods[*Kind];
-  
+
   Selector Sel = S.NSAPIObj->getNSValueLiteralSelector(*Kind);
-  
+
   ASTContext &CX = S.Context;
-  
+
   // Look up the NSValue class, if we haven't done so already. It's cached
   // in the Sema instance.
   if (!S.NSValueDecl) {
@@ -300,12 +300,12 @@ static ObjCMethodDecl *getNSValueFactoryMethod(Sema &S, SourceLocation Loc,
       S.Diag(Loc, diag::err_undeclared_nsvalue);
       return nullptr;
     }
-    
+
     // generate the pointer to NSValue type.
     QualType NSValueObject = CX.getObjCInterfaceType(S.NSValueDecl);
     S.NSValuePointer = CX.getObjCObjectPointerType(NSValueObject);
   }
-  
+
   // Look for the appropriate method within NSValue.
   ObjCMethodDecl *Method = S.NSValueDecl->lookupClassMethod(Sel);
   if (!Method && S.getLangOpts().DebuggerObjCLiteral) {
@@ -326,13 +326,13 @@ static ObjCMethodDecl *getNSValueFactoryMethod(Sema &S, SourceLocation Loc,
                                              SC_None, nullptr);
     Method->setMethodParams(S.Context, value, None);
   }
-  
+
   if (!validateBoxingMethod(S, Loc, S.NSValueDecl, Sel, Method))
     return nullptr;
-  
+
   // Note: if the parameter type is out-of-line, we'll catch it later in the
   // implicit conversion.
-  
+
   S.NSValueLiteralMethods[*Kind] = Method;
   return Method;
 }
@@ -549,41 +549,41 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       case CharacterLiteral::Ascii:
         ValueType = Context.CharTy;
         break;
-        
+
       case CharacterLiteral::Wide:
         ValueType = Context.getWideCharType();
         break;
-        
+
       case CharacterLiteral::UTF16:
         ValueType = Context.Char16Ty;
         break;
-        
+
       case CharacterLiteral::UTF32:
         ValueType = Context.Char32Ty;
         break;
       }
     }
-    
+
     if (const EnumType *ET = ValueType->getAs<EnumType>()) {
       if (!ET->getDecl()->isComplete()) {
         Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)
         << ValueType << ValueExpr->getSourceRange();
         return ExprError();
       }
-      
+
       ValueType = ET->getDecl()->getIntegerType();
     }
-    
+
     CheckForIntOverflow(ValueExpr);
     // FIXME:  Do I need to do anything special with BoolTy expressions?
-    
+
     // Look for the appropriate method within NSNumber.
     BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
     BoxedType = NSNumberPointer;
 
   } else if (ValueType->isStructureType() || ValueType->isPointerType() || ValueType->isObjCObjectPointerType()) {
     // Support of NSValue and NSString construction
-    
+
     // Check if we can construct NSString from chars
     const PointerType *PT = ValueType->getAs<PointerType>();
     if (PT && Context.hasSameUnqualifiedType(PT->getPointeeType(), Context.CharTy)) {
@@ -617,7 +617,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       if (!StringWithUTF8StringMethod) {
         IdentifierInfo *II = &Context.Idents.get("stringWithUTF8String");
         Selector stringWithUTF8String = Context.Selectors.getUnarySelector(II);
-        
+
         // Look for the appropriate method within NSString.
         BoxingMethod = NSStringDecl->lookupClassMethod(stringWithUTF8String);
         if (!BoxingMethod && getLangOpts().DebuggerObjCLiteral) {
@@ -642,11 +642,11 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
           M->setMethodParams(Context, value, None);
           BoxingMethod = M;
         }
-        
+
         if (!validateBoxingMethod(*this, SR.getBegin(), NSStringDecl,
                                   stringWithUTF8String, BoxingMethod))
-          return ExprError();
-        
+           return ExprError();
+
         StringWithUTF8StringMethod = BoxingMethod;
       }
       
@@ -656,7 +656,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       // Support for +valueWithNonretaintedObject and +valueWithPointer.
       // Limited support for structure types, such as NSRange,
       // NS/CG Rect, Size and Point.
-      
+
       // Look for the appropriate method within NSValue.
       BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
       BoxedType = NSValuePointer;

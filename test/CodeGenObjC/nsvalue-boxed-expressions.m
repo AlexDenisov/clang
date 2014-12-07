@@ -169,4 +169,3 @@ void doNonretainedObject() {
   NSValue *object = @(obj);
   // CHECK:      ret void
 }
-

@@ -188,4 +188,3 @@ void doNonretainedObject() {
   // CHECK:      call void @objc_release
   // CHECK-NEXT: ret void
 }
-
