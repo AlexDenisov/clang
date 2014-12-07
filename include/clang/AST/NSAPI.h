@@ -194,9 +194,11 @@ public:
     NSValueWithCGPoint,
     NSValueWithCGSize,
     NSValueWithCGRect,
-    NSValueWithRange
+    NSValueWithRange,
+    NSValueWithPointer,
+    NSValueWithNonretainedObject
   };
-  static const unsigned NumNSValueLiteralMethods = 7;
+  static const unsigned NumNSValueLiteralMethods = 9;
   
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   /// \param Instance if true it will return the selector for the init* method
@@ -256,7 +258,6 @@ public:
 
 private:
   bool isObjCTypedef(QualType T, StringRef name, IdentifierInfo *&II) const;
-  bool isObjCStructure(QualType T, StringRef name) const;
   bool isObjCEnumerator(const Expr *E,
                         StringRef name, IdentifierInfo *&II) const;
   Selector getOrInitSelector(ArrayRef<StringRef> Ids, Selector &Sel) const;
