@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -I %S/Inputs -triple x86_64-apple-darwin10 -emit-llvm -fblocks -fobjc-runtime-has-weak -O2 -disable-llvm-optzns -o - %s | FileCheck %s
+// RUN: %clang_cc1 -I %S/Inputs -triple x86_64-apple-darwin10 -emit-llvm -fblocks -fobjc-arc -fobjc-runtime-has-weak -O2 -disable-llvm-optzns -o - %s | FileCheck %s
 
 #import "nsvalue-boxed-expressions-support.h"
 
@@ -43,8 +43,10 @@ void doRange() {
   // CHECK-NEXT: [[P2:%.*]]        = load i64* [[P2_PTR]], align 1
   NSRange ns_range = { .location = 0, .length = 42 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i64 [[P1]], i64 [[P2]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *range = @(ns_range);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doPoint()
@@ -60,8 +62,10 @@ void doPoint() {
   // CHECK-NEXT: [[P2:%.*]]        = load double* [[P2_PTR]], align 1
   NSPoint ns_point = { .x = 42, .y = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], double [[P1]], double [[P2]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *point = @(ns_point);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doSize()
@@ -77,8 +81,10 @@ void doSize() {
   // CHECK-NEXT: [[P2:%.*]]       = load double* [[P2_PTR]], align 1
   NSSize ns_size = { .width = 42, .height = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], double [[P1]], double [[P2]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *size = @(ns_size);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doRect()
@@ -91,8 +97,10 @@ void doRect() {
   NSSize ns_size = { .width = 42, .height = 24 };
   NSRect ns_rect = { .origin = ns_point, .size = ns_size };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct._NSRect* byval align 8 [[RECT]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(ns_rect);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 
@@ -109,8 +117,10 @@ void doCGPoint() {
   // CHECK-NEXT: [[P2:%.*]]        = load double* [[P2_PTR]], align 1
   CGPoint cg_point = { .x = 42, .y = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], double [[P1]], double [[P2]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *point = @(cg_point);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doCGSize()
@@ -126,8 +136,10 @@ void doCGSize() {
   // CHECK-NEXT: [[P2:%.*]]       = load double* [[P2_PTR]], align 1
   CGSize cg_size = { .width = 42, .height = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], double [[P1]], double [[P2]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *size = @(cg_size);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doCGRect()
@@ -140,8 +152,10 @@ void doCGRect() {
   CGSize cg_size = { .width = 42, .height = 24 };
   CGRect cg_rect = { .origin = cg_point, .size = cg_size };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct.CGRect* byval align 8 [[RECT]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(cg_rect);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doVoidPointer()
@@ -153,8 +167,10 @@ void doVoidPointer() {
   // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
   const void *pointer = 0;
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *value = @(pointer);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
 // CHECK-LABEL: define void @doNonretainedObject()
@@ -166,7 +182,10 @@ void doNonretainedObject() {
   // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
   id obj;
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *object = @(obj);
-  // CHECK:      ret void
+  // CHECK:      call void @objc_release
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
 }
 
