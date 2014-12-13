@@ -506,10 +506,13 @@ NSAPI::getNSValueFactoryMethodKind(QualType T) const {
       return NSAPI::NSValueWithCGRect;
     if (isObjCNSRangeType(T))
       return NSAPI::NSValueWithRange;
+
+    return None;
   }
 
   if (T->isVoidPointerType())
     return NSAPI::NSValueWithPointer;
+  // isObjCObjectPointerType covers 'id' and ObjCObject * (NSObject *, NSString *, etc.)
   if (T->isObjCObjectPointerType())
     return NSAPI::NSValueWithNonretainedObject;
 
