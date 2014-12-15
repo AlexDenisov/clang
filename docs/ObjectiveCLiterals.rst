@@ -573,6 +573,18 @@ checks. Here are examples of their use:
         }
     #endif
 
+    #if __has_feature(objc_boxed_nsvalue_expressions)
+        CABasicAnimation animation = [CABasicAnimation animationWithKeyPath:@"position"];
+        animation.fromValue = @(layer.position);
+        animation.toValue = @(newPosition);
+        [layer addAnimation:animation forKey:@"move"];
+    #else
+        CABasicAnimation animation = [CABasicAnimation animationWithKeyPath:@"position"];
+        animation.fromValue = [NSValue valueWithCGPoint:layer.position];
+        animation.toValue = [NSValue valueWithCGPoint:newPosition];
+        [layer addAnimation:animation forKey:@"move"];
+    #endif
+
 Code can use also ``__has_feature(objc_bool)`` to check for the
 availability of numeric literals support. This checks for the new
 ``__objc_yes / __objc_no`` keywords, which enable the use of
