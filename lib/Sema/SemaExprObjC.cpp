@@ -539,7 +539,8 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   ValueExpr = RValue.get();
   QualType ValueType(ValueExpr->getType());
   if (ValueType->isBuiltinType() || ValueType->isEnumeralType()) {
-    // We support numeric, char and BOOL/bool types.
+    // We support numeric, char, BOOL/bool and Enum types.
+    // Enum types treat as Integer.
     // Check for a top-level character literal.
     if (const CharacterLiteral *Char =
         dyn_cast<CharacterLiteral>(ValueExpr->IgnoreParens())) {
