@@ -34,6 +34,8 @@ typedef struct _SomeStruct {
 
 @interface NSObject @end
 
+@interface ObjCObject @end
+
 @interface NSValue
 + (NSValue *)valueWithPoint:(NSPoint)point;
 + (NSValue *)valueWithSize:(NSSize)size;
@@ -79,6 +81,9 @@ int main() {
 
   NSObject *ns_object;
   id ns_object_value = @(ns_object);
+
+  ObjCObject *objc_object;
+  id objc_object_value = @(objc_object);
 
   SomeStruct s;
   id err = @(s); // expected-error{{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}
