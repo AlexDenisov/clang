@@ -50,8 +50,8 @@ typedef struct CGRect CGRect;
 + (NSValue *)valueWithRect:(NSRect)rect __attribute__((availability(macosx, introduced=10.0)));
 
 + (NSValue *)valueWithCGPoint:(CGPoint)point __attribute__((availability(ios, introduced=2.0)));
-+ (NSValue *)valueWithCGSize:(CGSize)size; __attribute__((availability(ios, introduced=2.0)));
-+ (NSValue *)valueWithCGRect:(CGRect)rect; __attribute__((availability(ios, introduced=2.0)));
++ (NSValue *)valueWithCGSize:(CGSize)size __attribute__((availability(ios, introduced=2.0)));
++ (NSValue *)valueWithCGRect:(CGRect)rect __attribute__((availability(ios, introduced=2.0)));
 
 + (NSValue *)valueWithPointer:(const void *)pointer;
 + (NSValue *)valueWithNonretainedObject:(id)object;
