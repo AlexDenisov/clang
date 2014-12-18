@@ -55,7 +55,7 @@ void doCGSize() {
   // CHECK:      [[SEL:%.*]]      = load i8** [[CGSIZE_SEL]]
   // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
   // CHECK:      [[SIZE_PTR:%.*]] = bitcast %struct.CGSize* {{.*}}
-  // CHECK:      [[PARAM:%.*]]     = load [4 x i32]* [[SIZE_PTR]]{{.*}}
+  // CHECK:      [[PARAM:%.*]]    = load [4 x i32]* [[SIZE_PTR]]{{.*}}
   CGSize cg_size = { .width = 42, .height = 24 };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], [4 x i32] [[PARAM]])
   NSValue *size = @(cg_size);
