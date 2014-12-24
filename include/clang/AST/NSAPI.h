@@ -195,10 +195,11 @@ public:
     NSValueWithCGSize,
     NSValueWithCGRect,
     NSValueWithRange,
+    NSValueWithEdgeInsets,
     NSValueWithPointer,
     NSValueWithNonretainedObject
   };
-  static const unsigned NumNSValueLiteralMethods = 9;
+  static const unsigned NumNSValueLiteralMethods = 10;
 
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   /// \param Instance if true it will return the selector for the init* method
@@ -249,6 +250,8 @@ public:
   bool isObjCCGRectType(QualType T) const;
   /// \brief Returns true if \param T is a typedef of "NSRange" in objective-c.
   bool isObjCNSRangeType(QualType T) const;
+  /// \brief Returns true if \param T is a typedef of "NSEdgeInsets" in objective-c.
+  bool isObjCNSEdgeInsetsType(QualType T) const;
   /// \brief Returns one of NSIntegral typedef names if \param T is a typedef
   /// of that name in objective-c.
   StringRef GetNSIntegralKind(QualType T) const;
@@ -289,7 +292,7 @@ private:
   mutable IdentifierInfo *NSASCIIStringEncodingId, *NSUTF8StringEncodingId;
   mutable IdentifierInfo *NSPointId, *NSSizeId, *NSRectId;
   mutable IdentifierInfo *CGPointId, *CGSizeId, *CGRectId;
-  mutable IdentifierInfo *NSRangeId;
+  mutable IdentifierInfo *NSRangeId, *NSEdgeInsetsId;
 };
 
 }  // end namespace clang
