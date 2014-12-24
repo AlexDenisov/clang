@@ -19,7 +19,8 @@ NSAPI::NSAPI(ASTContext &ctx)
     NSUIntegerId(nullptr), NSASCIIStringEncodingId(nullptr),
     NSUTF8StringEncodingId(nullptr), NSPointId(nullptr),
     NSSizeId(nullptr), NSRectId(nullptr), CGPointId(nullptr),
-    CGSizeId(nullptr), CGRectId(nullptr), NSRangeId(nullptr) {}
+    CGSizeId(nullptr), CGRectId(nullptr), NSRangeId(nullptr),
+    NSEdgeInsetsId(nullptr) {}
 
 IdentifierInfo *NSAPI::getNSClassId(NSClassIdKindKind K) const {
   static const char *ClassName[NumClassIds] = {
@@ -386,6 +387,7 @@ Selector NSAPI::getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const {
     "valueWithCGSize",
     "valueWithCGRect",
     "valueWithRange",
+    "valueWithEdgeInsets",
     "valueWithPointer",
     "valueWithNonretainedObject"
   };
@@ -506,6 +508,8 @@ NSAPI::getNSValueFactoryMethodKind(QualType T) const {
       return NSAPI::NSValueWithCGRect;
     if (isObjCNSRangeType(T))
       return NSAPI::NSValueWithRange;
+    if (isObjCNSEdgeInsetsType(T))
+      return NSAPI::NSValueWithEdgeInsets;
 
     return None;
   }
@@ -565,6 +569,11 @@ bool NSAPI::isObjCCGRectType(QualType T) const {
 /// \brief Returns true if \param T is a typedef of "NSRange" in objective-c.
 bool NSAPI::isObjCNSRangeType(QualType T) const {
   return isObjCTypedef(T, "NSRange", NSRangeId);
+}
+
+/// \brief Returns true if \param T is a typedef of "NSEdgeInsets" in objective-c.
+bool NSAPI::isObjCNSEdgeInsetsType(QualType T) const {
+  return isObjCTypedef(T, "NSEdgeInsets", NSEdgeInsetsId);
 }
 
 StringRef NSAPI::GetNSIntegralKind(QualType T) const {

@@ -656,7 +656,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     } else {
       // Support for +valueWithNonretaintedObject and +valueWithPointer.
       // Limited support for structure types, such as NSRange,
-      // NS/CG Rect, Size and Point.
+      // NS/CG Rect, Size, Point and NSEdgeInsets.
 
       // Look for the appropriate method within NSValue.
       BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);

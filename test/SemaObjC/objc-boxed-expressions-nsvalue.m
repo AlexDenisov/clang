@@ -1,4 +1,4 @@
-// RUN: %clang_cc1  -fsyntax-only -fblocks -triple x86_64-apple-darwin10 -verify %s
+// RUN: %clang_cc1  -fsyntax-only -triple x86_64-apple-darwin10.9 -verify %s
 
 typedef struct _NSPoint {
   int dummy;
@@ -28,6 +28,10 @@ typedef struct _NSRange {
   int dummy;
 } NSRange;
 
+typedef struct _NSEdgeInsets {
+  int dummy;
+} NSEdgeInsets;
+
 typedef struct _SomeStruct {
   double d;
 } SomeStruct;
@@ -55,6 +59,7 @@ void checkNSValueDiagnostic() {
 
 + (NSValue *)valueWithPointer:(const void *)pinter;
 + (NSValue *)valueWithNonretainedObject:(id)anObject;
++ (NSValue *)valueWithEdgeInsets:(NSEdgeInsets)insets __attribute__((availability(macosx, introduced=10.10)));
 @end
 
 int main() {
@@ -90,6 +95,9 @@ int main() {
 
   ObjCObject *objc_object;
   id objc_object_value = @(objc_object);
+
+  NSEdgeInsets edge_insets;
+  id edge_insets_object = @(edge_insets);
 
   SomeStruct s;
   id err = @(s); // expected-error{{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}
