@@ -249,8 +249,8 @@ It said that some C structures, pointers and NSObjects can be used:
 
 The following list of structs supported, depends on target system:
 
-  - OSX: ``NSPoint``, ``NSSize``, ``NSRect``, ``NSRange``
-  - iOS: ``CGPoint``, ``CGSize``, ``CGRect``, ``NSRange``
+  - OSX: ``NSPoint``, ``NSSize``, ``NSRect``, ``NSRange``, ``NSEdgeInsets``
+  - iOS: ``CGPoint``, ``CGSize``, ``CGRect``, ``NSRange``, ``NSEdgeInsets``
 
 Container Literals
 ==================
