@@ -1,18 +1,20 @@
-// RUN: %clang_cc1 -I %S/Inputs -triple x86_64-apple-darwin10 -emit-llvm -O2 -disable-llvm-optzns -o - %s | FileCheck %s
+// RUN: %clang_cc1 -I %S/Inputs -triple x86_64-apple-macosx -emit-llvm -O2 -disable-llvm-optzns -o - %s | FileCheck %s
 
 #import "nsvalue-boxed-expressions-support.h"
 
 // CHECK:      [[CLASS:@.*]]        = external global %struct._class_t
 // CHECK:      [[NSVALUE:@.*]]      = {{.*}}[[CLASS]]{{.*}}
 
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithRange:{{.*}}
-// CHECK-NEXT: [[RANGE_SEL:@.*]]    = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPoint:{{.*}}
-// CHECK-NEXT: [[POINT_SEL:@.*]]    = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithSize:{{.*}}
-// CHECK-NEXT: [[SIZE_SEL:@.*]]     = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithRect:{{.*}}
-// CHECK-NEXT: [[RECT_SEL:@.*]]     = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithRange:{{.*}}
+// CHECK-NEXT: [[RANGE_SEL:@.*]]       = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithPoint:{{.*}}
+// CHECK-NEXT: [[POINT_SEL:@.*]]       = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithSize:{{.*}}
+// CHECK-NEXT: [[SIZE_SEL:@.*]]        = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithRect:{{.*}}
+// CHECK-NEXT: [[RECT_SEL:@.*]]        = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithEdgeInsets:{{.*}}
+// CHECK-NEXT: [[EDGE_INSETS_SEL:@.*]] = {{.*}}[[METH]]{{.*}}
 
 // CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPointer:{{.*}}
 // CHECK-NEXT: [[POINTER_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
@@ -82,6 +84,18 @@ void doRect() {
   NSRect ns_rect = { .origin = ns_point, .size = ns_size };
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct._NSRect* byval align 8 [[RECT]])
   NSValue *rect = @(ns_rect);
+  // CHECK:      ret void
+}
+
+// CHECK-LABEL: define void @doNSEdgeInsets()
+void doNSEdgeInsets() {
+  // CHECK:      [[EDGE_INSETS:%.*]] = alloca %struct.NSEdgeInsets{{.*}}
+  // CHECK:      [[RECV_PTR:%.*]]    = load {{.*}} [[NSVALUE]]
+  // CHECK:      [[SEL:%.*]]         = load i8** [[EDGE_INSETS_SEL]]
+  // CHECK:      [[RECV:%.*]]        = bitcast %struct._class_t* [[RECV_PTR]] to i8*
+  NSEdgeInsets ns_edge_insets;
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct.NSEdgeInsets* byval align 8 [[EDGE_INSETS]])
+  NSValue *edge_insets = @(ns_edge_insets);
   // CHECK:      ret void
 }
 
