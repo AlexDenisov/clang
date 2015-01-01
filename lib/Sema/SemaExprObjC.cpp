@@ -670,6 +670,8 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     return ExprError();
   }
   
+  DiagnoseUseOfDecl(BoxingMethod, SR.getBegin());
+
   // Convert the expression to the type that the parameter requires.
   ParmVarDecl *ParamDecl = BoxingMethod->parameters()[0];
   InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
