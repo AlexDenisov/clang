@@ -5,14 +5,16 @@
 // CHECK:      [[CLASS:@.*]]        = external global %struct._class_t
 // CHECK:      [[NSVALUE:@.*]]      = {{.*}}[[CLASS]]{{.*}}
 
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithRange:{{.*}}
-// CHECK-NEXT: [[RANGE_SEL:@.*]]    = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithCGPoint:{{.*}}
-// CHECK-NEXT: [[CGPOINT_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithCGSize:{{.*}}
-// CHECK-NEXT: [[CGSIZE_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithCGRect:{{.*}}
-// CHECK-NEXT: [[CGRECT_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithRange:{{.*}}
+// CHECK-NEXT: [[RANGE_SEL:@.*]]       = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithCGPoint:{{.*}}
+// CHECK-NEXT: [[CGPOINT_SEL:@.*]]     = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithCGSize:{{.*}}
+// CHECK-NEXT: [[CGSIZE_SEL:@.*]]      = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithCGRect:{{.*}}
+// CHECK-NEXT: [[CGRECT_SEL:@.*]]      = {{.*}}[[METH]]{{.*}}
+// CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithEdgeInsets:{{.*}}
+// CHECK-NEXT: [[EDGE_INSETS_SEL:@.*]] = {{.*}}[[METH]]{{.*}}
 
 // CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPointer:{{.*}}
 // CHECK-NEXT: [[POINTER_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
@@ -82,6 +84,22 @@ void doCGRect() {
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], [8 x i32] [[PARAM]])
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(cg_rect);
+  // CHECK:      call void @objc_release
+  // CHECK-NEXT: ret void
+}
+
+// CHECK-LABEL: define void @doNSEdgeInsets()
+void doNSEdgeInsets() {
+  // CHECK:      [[EDGE_INSETS:%.*]]     = alloca %struct.NSEdgeInsets{{.*}}
+  // CHECK:      [[RECV_PTR:%.*]]        = load {{.*}} [[NSVALUE]]
+  // CHECK:      [[SEL:%.*]]             = load i8** [[EDGE_INSETS_SEL]]
+  // CHECK:      [[RECV:%.*]]            = bitcast %struct._class_t* [[RECV_PTR]] to i8*
+  // CHECK:      [[EDGE_INSETS_PTR:%.*]] = bitcast %struct.NSEdgeInsets* {{.*}}
+  // CHECK:      [[PARAM:%.*]]           = load [8 x i32]* [[EDGE_INSETS_PTR]]{{.*}}
+  NSEdgeInsets ns_edge_insets;
+  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], [8 x i32] [[PARAM]])
+  // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
+  NSValue *edge_insets = @(ns_edge_insets);
   // CHECK:      call void @objc_release
   // CHECK-NEXT: ret void
 }

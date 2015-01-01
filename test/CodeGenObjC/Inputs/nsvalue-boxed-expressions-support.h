@@ -42,6 +42,14 @@ struct CGRect {
 } __attribute__((availability(ios,introduced=2.0)));
 typedef struct CGRect CGRect;
 
+struct NSEdgeInsets {
+  CGFloat top;
+  CGFloat left;
+  CGFloat bottom;
+  CGFloat right;
+};
+typedef struct NSEdgeInsets NSEdgeInsets;
+
 @interface NSValue
 + (NSValue *)valueWithRange:(NSRange)range;
 
@@ -52,6 +60,10 @@ typedef struct CGRect CGRect;
 + (NSValue *)valueWithCGPoint:(CGPoint)point __attribute__((availability(ios, introduced=2.0)));
 + (NSValue *)valueWithCGSize:(CGSize)size __attribute__((availability(ios, introduced=2.0)));
 + (NSValue *)valueWithCGRect:(CGRect)rect __attribute__((availability(ios, introduced=2.0)));
+
++ (NSValue *)valueWithEdgeInsets:(NSEdgeInsets)edgeInsets 
+  __attribute__((availability(macosx, introduced=10.10))) 
+  __attribute__((availability(ios, introduced=8.0)));
 
 + (NSValue *)valueWithPointer:(const void *)pointer;
 + (NSValue *)valueWithNonretainedObject:(id)object;
