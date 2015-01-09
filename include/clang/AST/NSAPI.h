@@ -195,11 +195,9 @@ public:
     NSValueWithCGSize,
     NSValueWithCGRect,
     NSValueWithRange,
-    NSValueWithEdgeInsets,
-    NSValueWithPointer,
-    NSValueWithNonretainedObject
+    NSValueWithEdgeInsets
   };
-  static const unsigned NumNSValueLiteralMethods = 10;
+  static const unsigned NumNSValueLiteralMethods = 8;
 
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   /// \param Instance if true it will return the selector for the init* method

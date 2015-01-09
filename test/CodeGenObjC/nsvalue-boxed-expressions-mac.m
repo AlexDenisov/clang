@@ -16,12 +16,6 @@
 // CHECK:      [[METH:@.*]]            = private global{{.*}}valueWithEdgeInsets:{{.*}}
 // CHECK-NEXT: [[EDGE_INSETS_SEL:@.*]] = {{.*}}[[METH]]{{.*}}
 
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithPointer:{{.*}}
-// CHECK-NEXT: [[POINTER_SEL:@.*]]  = {{.*}}[[METH]]{{.*}}
-
-// CHECK:      [[METH:@.*]]         = private global{{.*}}valueWithNonretainedObject:{{.*}}
-// CHECK-NEXT: [[NONRET_SEL:@.*]]   = {{.*}}[[METH]]{{.*}}
-
 // CHECK-LABEL: define void @doRange()
 void doRange() {
   // CHECK:      [[RANGE:%.*]]     = bitcast %struct._NSRange* {{.*}}
@@ -96,32 +90,6 @@ void doNSEdgeInsets() {
   NSEdgeInsets ns_edge_insets;
   // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], %struct.NSEdgeInsets* byval align 8 [[EDGE_INSETS]])
   NSValue *edge_insets = @(ns_edge_insets);
-  // CHECK:      ret void
-}
-
-// CHECK-LABEL: define void @doVoidPointer()
-void doVoidPointer() {
-  // CHECK:      [[POINTER:%.*]]  = alloca i8*{{.*}}
-  // CHECK:      [[RECV_PTR:%.*]] = load {{.*}} [[NSVALUE]]
-  // CHECK:      [[PARAM:%.*]]    = load i8** [[POINTER]]
-  // CHECK:      [[SEL:%.*]]      = load i8** [[POINTER_SEL]]
-  // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
-  const void *pointer = 0;
-  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
-  NSValue *value = @(pointer);
-  // CHECK:      ret void
-}
-
-// CHECK-LABEL: define void @doNonretainedObject()
-void doNonretainedObject() {
-  // CHECK:      [[OBJ:%.*]]      = alloca i8*{{.*}}
-  // CHECK:      [[RECV_PTR:%.*]] = load {{.*}} [[NSVALUE]]
-  // CHECK:      [[PARAM:%.*]]    = load i8** [[OBJ]]
-  // CHECK:      [[SEL:%.*]]      = load i8** [[NONRET_SEL]]
-  // CHECK:      [[RECV:%.*]]     = bitcast %struct._class_t* [[RECV_PTR]] to i8*
-  id obj;
-  // CHECK:      call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[PARAM]])
-  NSValue *object = @(obj);
   // CHECK:      ret void
 }
 

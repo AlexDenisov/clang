@@ -387,9 +387,7 @@ Selector NSAPI::getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const {
     "valueWithCGSize",
     "valueWithCGRect",
     "valueWithRange",
-    "valueWithEdgeInsets",
-    "valueWithPointer",
-    "valueWithNonretainedObject"
+    "valueWithEdgeInsets"
   };
 
   if (NSValueClassSelectors[MK].isNull())
@@ -492,33 +490,26 @@ NSAPI::getNSNumberFactoryMethodKind(QualType T) const {
 
 Optional<NSAPI::NSValueLiteralMethodKind>
 NSAPI::getNSValueFactoryMethodKind(QualType T) const {
-  const RecordType *RT = T->getAsStructureType();
-  if (RT) {
-    if (isObjCNSPointType(T))
-      return NSAPI::NSValueWithPoint;
-    if (isObjCNSSizeType(T))
-      return NSAPI::NSValueWithSize;
-    if (isObjCNSRectType(T))
-      return NSAPI::NSValueWithRect;
-    if (isObjCCGPointType(T))
-      return NSAPI::NSValueWithCGPoint;
-    if (isObjCCGSizeType(T))
-      return NSAPI::NSValueWithCGSize;
-    if (isObjCCGRectType(T))
-      return NSAPI::NSValueWithCGRect;
-    if (isObjCNSRangeType(T))
-      return NSAPI::NSValueWithRange;
-    if (isObjCNSEdgeInsetsType(T))
-      return NSAPI::NSValueWithEdgeInsets;
-
+  if (!T->isStructureType()) {
     return None;
   }
 
-  if (T->isVoidPointerType())
-    return NSAPI::NSValueWithPointer;
-  // isObjCObjectPointerType covers 'id' and ObjCObject * (NSObject *, NSString *, etc.)
-  if (T->isObjCObjectPointerType())
-    return NSAPI::NSValueWithNonretainedObject;
+  if (isObjCNSPointType(T))
+    return NSAPI::NSValueWithPoint;
+  if (isObjCNSSizeType(T))
+    return NSAPI::NSValueWithSize;
+  if (isObjCNSRectType(T))
+    return NSAPI::NSValueWithRect;
+  if (isObjCCGPointType(T))
+    return NSAPI::NSValueWithCGPoint;
+  if (isObjCCGSizeType(T))
+    return NSAPI::NSValueWithCGSize;
+  if (isObjCCGRectType(T))
+    return NSAPI::NSValueWithCGRect;
+  if (isObjCNSRangeType(T))
+    return NSAPI::NSValueWithRange;
+  if (isObjCNSEdgeInsetsType(T))
+    return NSAPI::NSValueWithEdgeInsets;
 
   return None;
 }

@@ -64,9 +64,6 @@ typedef struct NSEdgeInsets NSEdgeInsets;
 + (NSValue *)valueWithEdgeInsets:(NSEdgeInsets)edgeInsets 
   __attribute__((availability(macosx, introduced=10.10))) 
   __attribute__((availability(ios, introduced=8.0)));
-
-+ (NSValue *)valueWithPointer:(const void *)pointer;
-+ (NSValue *)valueWithNonretainedObject:(id)object;
 @end
 
 #endif // NSVALUE_BOXED_EXPRESSIONS_SUPPORT_H
