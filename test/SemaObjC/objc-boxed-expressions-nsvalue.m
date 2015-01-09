@@ -36,10 +36,6 @@ typedef struct _SomeStruct {
   double d;
 } SomeStruct;
 
-@interface NSObject @end
-
-@interface ObjCObject @end
-
 void checkNSValueDiagnostic() {
   NSRect rect;
   id value = @(rect); // expected-error{{NSValue must be available to use Objective-C boxed expressions}} \
@@ -57,8 +53,6 @@ void checkNSValueDiagnostic() {
 
 + (NSValue *)valueWithRange:(NSRange)range;
 
-+ (NSValue *)valueWithPointer:(const void *)pinter;
-+ (NSValue *)valueWithNonretainedObject:(id)anObject;
 + (NSValue *)valueWithEdgeInsets:(NSEdgeInsets)insets __attribute__((availability(macosx, introduced=10.10)));
 @end
 
@@ -83,18 +77,6 @@ int main() {
 
   NSRange ns_range;
   id ns_range_value = @(ns_range);
-
-  const void *void_pointer;
-  id void_pointer_value = @(void_pointer);
-
-  id id_object;
-  id id_object_value = @(id_object);
-
-  NSObject *ns_object;
-  id ns_object_value = @(ns_object);
-
-  ObjCObject *objc_object;
-  id objc_object_value = @(objc_object);
 
   NSEdgeInsets edge_insets;
   id edge_insets_object = @(edge_insets);

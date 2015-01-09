@@ -582,12 +582,11 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
     BoxedType = NSNumberPointer;
 
-  } else if (ValueType->isStructureType() || ValueType->isPointerType() || ValueType->isObjCObjectPointerType()) {
-    // Support of NSValue and NSString construction
+  } else if (const PointerType *PT = ValueType->getAs<PointerType>()) {
+    // Support of NSString construction
 
     // Check if we can construct NSString from chars
-    const PointerType *PT = ValueType->getAs<PointerType>();
-    if (PT && Context.hasSameUnqualifiedType(PT->getPointeeType(), Context.CharTy)) {
+    if (Context.hasSameUnqualifiedType(PT->getPointeeType(), Context.CharTy)) {
       if (!NSStringDecl) {
         IdentifierInfo *NSStringId =
           NSAPIObj->getNSClassId(NSAPI::ClassId_NSString);
@@ -653,15 +652,14 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       
       BoxingMethod = StringWithUTF8StringMethod;
       BoxedType = NSStringPointer;
-    } else {
-      // Support for +valueWithNonretaintedObject and +valueWithPointer.
-      // Limited support for structure types, such as NSRange,
-      // NS/CG Rect, Size, Point and NSEdgeInsets.
-
-      // Look for the appropriate method within NSValue.
-      BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
-      BoxedType = NSValuePointer;
     }
+  } else if (ValueType->isStructureType()) {
+    // Limited support for structure types, such as NSRange,
+    // NS/CG Rect, Size, Point and NSEdgeInsets.
+    
+    // Look for the appropriate method within NSValue.
+    BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
+    BoxedType = NSValuePointer;
   }
 
   if (!BoxingMethod) {
