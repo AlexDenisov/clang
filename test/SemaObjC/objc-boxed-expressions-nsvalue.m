@@ -1,4 +1,4 @@
-// RUN: %clang_cc1  -fsyntax-only -triple x86_64-apple-darwin10.9 -verify %s
+// RUN: %clang_cc1  -fsyntax-only -triple x86_64-apple-macosx10.9 -verify %s
 
 typedef struct _NSPoint {
   int dummy;
