@@ -2355,7 +2355,7 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
     SelLoc = SelectorLocs.front();
   else
     SelLoc = Loc;
-
+  
   if (LBracLoc.isInvalid()) {
     Diag(Loc, diag::err_missing_open_square_message_send)
       << FixItHint::CreateInsertion(Loc, "[");
@@ -2799,6 +2799,8 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
       }
     }
   }
+  
+  CheckObjCSelfRefCollection(Result);
   
   return MaybeBindToTemporary(Result);
 }

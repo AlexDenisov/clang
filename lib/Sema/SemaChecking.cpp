@@ -8187,6 +8187,73 @@ static bool isSetterLikeSelector(Selector sel) {
   return !isLowercase(str.front());
 }
 
+bool IsNSMutableArrayMethod(const Sema &S,
+                            const ObjCMethodDecl *Method,
+                            int *ArgIndex) {
+  if (!Method) {
+    return false;
+  }
+
+  Selector Sel = Method->getSelector();
+  Optional<NSAPI::NSArrayMethodKind> MKOpt =
+    S.NSAPIObj->getNSArrayMethodKind(Sel);
+  if (!MKOpt) {
+    return false;
+  }
+  
+  NSAPI::NSArrayMethodKind MK = *MKOpt;
+  
+  switch (MK) {
+    case NSAPI::NSMutableArr_addObject:
+    case NSAPI::NSMutableArr_insertObjectAtIndex:
+    case NSAPI::NSMutableArr_setObjectAtIndexedSubscript:
+      *ArgIndex = 0;
+      break;
+    case NSAPI::NSMutableArr_replaceObjectAtIndex:
+      *ArgIndex = 1;
+      break;
+    default:
+      return false;
+      break;
+  }
+
+  return true;
+}
+
+void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
+  if (!Message->isInstanceMessage()) {
+    return;
+  }
+  
+  int ArgIndex;
+  
+  if (IsNSMutableArrayMethod(*this, Message->getMethodDecl(), &ArgIndex)) {
+
+  } else {
+    return;
+  }
+  
+  Expr *Receiver = Message->getInstanceReceiver();
+  if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Receiver)) {
+    Receiver = OE->getSourceExpr();
+  }
+  
+  Expr *Arg = Message->getArg(ArgIndex)->IgnoreImpCasts();
+  if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Arg)) {
+    Arg = OE->getSourceExpr();
+  }
+  
+  DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver->IgnoreImpCasts());
+  DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg);
+  
+  if (ReceiverRE && ArgRE) {
+    if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+      Diag(Message->getSourceRange().getBegin(),
+           diag::warn_objc_self_ref_collection);
+    }
+  }
+}
+
 /// Check a message send to see if it's likely to cause a retain cycle.
 void Sema::checkRetainCycles(ObjCMessageExpr *msg) {
   // Only check instance methods whose selector looks like a setter.

@@ -124,7 +124,27 @@ Selector NSAPI::getNSArraySelector(NSArrayMethodKind MK) const {
       Sel = Ctx.Selectors.getSelector(2, KeyIdents);
       break;
     }
+    case NSMutableArr_addObject:
+      Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("addObject"));
+      break;
+    case NSMutableArr_insertObjectAtIndex: {
+      IdentifierInfo *Idents[] = {
+        &Ctx.Idents.get("insertObject"),
+        &Ctx.Idents.get("atIndex")
+      };
+      Sel = Ctx.Selectors.getSelector(2, Idents);
+      break;
     }
+    case NSMutableArr_setObjectAtIndexedSubscript: {
+      IdentifierInfo *Idents[] = {
+        &Ctx.Idents.get("setObject"),
+        &Ctx.Idents.get("atIndexedSubscript")
+      };
+      Sel = Ctx.Selectors.getSelector(2, Idents);
+      break;
+    }
+    }
+
     return (NSArraySelectors[MK] = Sel);
   }
 

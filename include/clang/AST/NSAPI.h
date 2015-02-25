@@ -77,9 +77,12 @@ public:
     NSArr_initWithArray,
     NSArr_initWithObjects,
     NSArr_objectAtIndex,
-    NSMutableArr_replaceObjectAtIndex
+    NSMutableArr_replaceObjectAtIndex,
+    NSMutableArr_addObject,
+    NSMutableArr_insertObjectAtIndex,
+    NSMutableArr_setObjectAtIndexedSubscript
   };
-  static const unsigned NumNSArrayMethods = 9;
+  static const unsigned NumNSArrayMethods = 12;
 
   /// \brief The Objective-C NSArray selectors.
   Selector getNSArraySelector(NSArrayMethodKind MK) const;

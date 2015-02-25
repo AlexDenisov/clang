@@ -5263,6 +5263,9 @@ def err_objc_object_catch : Error<
   "can't catch an Objective-C object by value">;
 def err_incomplete_type_objc_at_encode : Error<
   "'@encode' of incomplete type %0">;
+def warn_objc_self_ref_collection : Warning<
+  "attempt to insert array into itself">,
+  InGroup<DiagGroup<"objc-self-ref-collection">>;
 
 def warn_setter_getter_impl_required : Warning<
   "property %0 requires method %1 to be defined - "

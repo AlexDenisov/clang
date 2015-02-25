@@ -8644,6 +8644,10 @@ private:
   /// \brief Check if the given expression contains 'break' or 'continue'
   /// statement that produces control flow different from GCC.
   void CheckBreakContinueBinding(Expr *E);
+  
+  /// \brief Check whether receiver is mutable ObjC collection which
+  /// attempts to add himself into this collection
+  void CheckObjCSelfRefCollection(ObjCMessageExpr *Message);
 
 public:
   /// \brief Register a magic integral constant to be used as a type tag.
