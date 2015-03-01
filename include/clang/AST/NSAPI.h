@@ -34,9 +34,10 @@ public:
     ClassId_NSDictionary,
     ClassId_NSMutableDictionary,
     ClassId_NSNumber,
-    ClassId_NSMutableSet
+    ClassId_NSMutableSet,
+    ClassId_NSCountedSet
   };
-  static const unsigned NumClassIds = 8;
+  static const unsigned NumClassIds = 9;
 
   enum NSStringMethodKind {
     NSStr_stringWithString,

@@ -8308,6 +8308,41 @@ Optional<int> GetNSMutableSetIndex(Sema &S, ObjCMessageExpr *Message) {
   return None;
 }
 
+Optional<int> GetNSCountedSetIndex(Sema &S, ObjCMessageExpr *Message) {
+  
+  if (!S.NSCountedSetDecl) {
+    IdentifierInfo *NSCountedSetId =
+    S.NSAPIObj->getNSClassId(NSAPI::ClassId_NSCountedSet);
+    NamedDecl *IF = S.LookupSingleName(S.TUScope, NSCountedSetId,
+                                       Message->getLocStart(),
+                                       Sema::LookupOrdinaryName);
+    S.NSCountedSetDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+    QualType NSCountedSetObject =
+    S.Context.getObjCInterfaceType(S.NSCountedSetDecl);
+    S.NSCountedSetPointer =
+    S.Context.getObjCObjectPointerType(NSCountedSetObject);
+  }
+  
+  if (S.NSCountedSetPointer != Message->getReceiverType()) {
+    return None;
+  }
+  
+  Selector Sel = Message->getSelector();
+  
+  Optional<NSAPI::NSSetMethodKind> MKOpt =
+  S.NSAPIObj->getNSSetMethodKind(Sel);
+  if (!MKOpt) {
+    return None;
+  }
+  
+  NSAPI::NSSetMethodKind MK = *MKOpt;
+  if (MK == NSAPI::NSSet_addObject) {
+    return 0;
+  }
+  
+  return None;
+}
+
 void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
   if (!Message->isInstanceMessage()) {
     return;
@@ -8322,6 +8357,8 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     Select = 1;
   } else if ((ArgOpt = GetNSMutableSetIndex(*this, Message))) {
     Select = 2;
+  } else if ((ArgOpt = GetNSCountedSetIndex(*this, Message))) {
+    Select = 3;
   } else {
     return;
   }

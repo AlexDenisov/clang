@@ -27,11 +27,16 @@ typedef long int NSUInteger;
 
 @end
 
+@interface NSCountedSet : NSMutableSet
+
+@end
+
 @interface SelfRefClass 
 {
   NSMutableArray *_array;
   NSMutableDictionary *_dictionary;
   NSMutableSet *_set;
+  NSCountedSet *_countedSet;
 }
 @end
 
@@ -41,6 +46,7 @@ typedef long int NSUInteger;
   [_array addObject:_array]; // expected-warning {{attempt to insert array into itself}}
   [_dictionary setObject:_dictionary forKey:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
   [_set addObject:_set]; // expected-warning {{attempt to insert set into itself}}
+  [_countedSet addObject:_countedSet]; // expected-warning {{attempt to insert counted set into itself}}
 }
 
 - (void)checkNSMutableArray:(NSMutableArray *)a {
@@ -55,6 +61,10 @@ typedef long int NSUInteger;
   [s addObject:s]; // expected-warning {{attempt to insert set into itself}}
 }
 
+- (void)checkNSCountedSet:(NSCountedSet *)s {
+  [s addObject:s]; // expected-warning {{attempt to insert counted set into itself}}
+}
+
 @end
 
 void checkNSMutableArrayParam(NSMutableArray *a) {
@@ -67,6 +77,10 @@ void checkNSMutableDictionaryParam(NSMutableDictionary *d) {
 
 void checkNSMutableSetParam(NSMutableSet *s) {
   [s addObject:s]; // expected-warning {{attempt to insert set into itself}}
+}
+
+void checkNSCountedSetParam(NSCountedSet *s) {
+  [s addObject:s]; // expected-warning {{attempt to insert counted set into itself}}
 }
 
 void checkNSMutableArray() {
@@ -92,5 +106,11 @@ void checkNSMutableSet() {
   NSMutableSet *s = nil;
 
   [s addObject:s]; // expected-warning {{attempt to insert set into itself}}
+}
+
+void checkNSCountedSet() {
+  NSCountedSet *s = nil;
+
+  [s addObject:s]; // expected-warning {{attempt to insert counted set into itself}}
 }
 

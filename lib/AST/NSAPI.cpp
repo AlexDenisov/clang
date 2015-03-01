@@ -28,7 +28,8 @@ IdentifierInfo *NSAPI::getNSClassId(NSClassIdKindKind K) const {
     "NSDictionary",
     "NSMutableDictionary",
     "NSNumber",
-    "NSMutableSet"
+    "NSMutableSet",
+    "NSCountedSet"
   };
 
   if (!ClassIds[K])
