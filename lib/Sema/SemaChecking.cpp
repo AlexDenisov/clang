@@ -8187,33 +8187,50 @@ static bool isSetterLikeSelector(Selector sel) {
   return !isLowercase(str.front());
 }
 
-bool IsNSMutableArrayMethod(const Sema &S,
-                            const ObjCMethodDecl *Method,
-                            int *ArgIndex) {
-  Selector Sel = Method->getSelector();
+Optional<int> GetNSMutableArrayIndex(const Sema &S, const Selector Sel) {
   Optional<NSAPI::NSArrayMethodKind> MKOpt =
     S.NSAPIObj->getNSArrayMethodKind(Sel);
   if (!MKOpt) {
-    return false;
+    return None;
   }
-  
+
   NSAPI::NSArrayMethodKind MK = *MKOpt;
-  
+
   switch (MK) {
     case NSAPI::NSMutableArr_addObject:
     case NSAPI::NSMutableArr_insertObjectAtIndex:
     case NSAPI::NSMutableArr_setObjectAtIndexedSubscript:
-      *ArgIndex = 0;
-      break;
+      return 0;
     case NSAPI::NSMutableArr_replaceObjectAtIndex:
-      *ArgIndex = 1;
-      break;
+      return 1;
+
     default:
-      return false;
-      break;
+      return None;
   }
 
-  return true;
+  return None;
+}
+
+Optional<int> GetNSMutableDictionaryIndex(const Sema &S, const Selector Sel) {
+  Optional<NSAPI::NSDictionaryMethodKind> MKOpt =
+    S.NSAPIObj->getNSDictionaryMethodKind(Sel);
+  if (!MKOpt) {
+    return None;
+  }
+  
+  NSAPI::NSDictionaryMethodKind MK = *MKOpt;
+  
+  switch (MK) {
+    case NSAPI::NSMutableDict_setObjectForKey:
+    case NSAPI::NSMutableDict_setValueForKey:
+    case NSAPI::NSMutableDict_setObjectForKeyedSubscript:
+      return 0;
+      
+    default:
+      return None;
+  }
+  
+  return None;
 }
 
 void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
@@ -8221,13 +8238,19 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     return;
   }
   
-  int ArgIndex;
+  Selector Sel = Message->getMethodDecl()->getSelector();
+  Optional<int> ArgOpt;
+  int Select = 0;
   
-  if (IsNSMutableArrayMethod(*this, Message->getMethodDecl(), &ArgIndex)) {
-
+  if ((ArgOpt = GetNSMutableArrayIndex(*this, Sel))) {
+    Select = 0;
+  } else if ((ArgOpt = GetNSMutableDictionaryIndex(*this, Sel))) {
+    Select = 1;
   } else {
     return;
   }
+  
+  int ArgIndex = *ArgOpt;
   
   Expr *Receiver = Message->getInstanceReceiver()->IgnoreImpCasts();
   if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Receiver)) {
@@ -8243,7 +8266,7 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
       if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
         Diag(Message->getSourceRange().getBegin(),
-             diag::warn_objc_self_ref_collection);
+             diag::warn_objc_self_ref_collection) << Select;
         return;
       }
     }
@@ -8253,7 +8276,7 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     if (ObjCIvarRefExpr *ArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
       if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
         Diag(Message->getSourceRange().getBegin(),
-             diag::warn_objc_self_ref_collection);
+             diag::warn_objc_self_ref_collection) << Select;
       }
     }
   }

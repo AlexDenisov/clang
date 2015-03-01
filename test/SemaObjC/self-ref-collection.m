@@ -2,6 +2,7 @@
 
 typedef long int NSUInteger;
 #define nil 0
+@class NSString;
 
 @interface NSMutableArray
 
@@ -12,9 +13,18 @@ typedef long int NSUInteger;
 
 @end
 
+@interface NSMutableDictionary
+
+- (void)setObject:(id)object forKey:(id)key;
+- (void)setObject:(id)object forKeyedSubscript:(id)key;
+- (void)setValue:(id)value forKey:(NSString *)key;
+
+@end
+
 @interface SelfRefClass 
 {
   NSMutableArray *_array;
+  NSMutableDictionary *_dictionary;
 }
 @end
 
@@ -22,25 +32,43 @@ typedef long int NSUInteger;
 
 - (void)check {
   [_array addObject:_array]; // expected-warning {{attempt to insert array into itself}}
+  [_dictionary setObject:_dictionary forKey:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
 }
 
-- (void)checkNSMutableArray:(NSMutableArray *)array {
-  [array addObject:array]; // expected-warning {{attempt to insert array into itself}}
+- (void)checkNSMutableArray:(NSMutableArray *)a {
+  [a addObject:a]; // expected-warning {{attempt to insert array into itself}}
+}
+
+- (void)checkNSMutableDictionary:(NSMutableDictionary *)d {
+  [d setObject:d forKey:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
 }
 
 @end
 
-void checkNSMutableArrayParam(NSMutableArray *_param) {
-  [_param addObject:_param]; // expected-warning {{attempt to insert array into itself}}
+void checkNSMutableArrayParam(NSMutableArray *a) {
+  [a addObject:a]; // expected-warning {{attempt to insert array into itself}}
+}
+
+void checkNSMutableDictionaryParam(NSMutableDictionary *d) {
+  [d setObject:d forKey:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
 }
 
 void checkNSMutableArray() {
-  NSMutableArray *array = nil;
+  NSMutableArray *a = nil;
 
-  [array addObject:array]; // expected-warning {{attempt to insert array into itself}}
-  [array insertObject:array atIndex:0]; // expected-warning {{attempt to insert array into itself}}
-  [array replaceObjectAtIndex:0 withObject:array]; // expected-warning {{attempt to insert array into itself}}
-  [array setObject:array atIndexedSubscript:0]; // expected-warning {{attempt to insert array into itself}}
-  array[0] = array; // expected-warning {{attempt to insert array into itself}}
+  [a addObject:a]; // expected-warning {{attempt to insert array into itself}}
+  [a insertObject:a atIndex:0]; // expected-warning {{attempt to insert array into itself}}
+  [a replaceObjectAtIndex:0 withObject:a]; // expected-warning {{attempt to insert array into itself}}
+  [a setObject:a atIndexedSubscript:0]; // expected-warning {{attempt to insert array into itself}}
+  a[0] = a; // expected-warning {{attempt to insert array into itself}}
+}
+
+void checkNSMutableDictionary() {
+  NSMutableDictionary *d = nil;
+
+  [d setObject:d forKey:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
+  [d setObject:d forKeyedSubscript:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
+  [d setValue:d forKey:@"key"]; // expected-warning {{attempt to insert dictionary into itself}}
+  d[@"key"] = d; // expected-warning {{attempt to insert dictionary into itself}}
 }
 

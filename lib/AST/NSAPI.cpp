@@ -128,19 +128,19 @@ Selector NSAPI::getNSArraySelector(NSArrayMethodKind MK) const {
       Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("addObject"));
       break;
     case NSMutableArr_insertObjectAtIndex: {
-      IdentifierInfo *Idents[] = {
+      IdentifierInfo *KeyIdents[] = {
         &Ctx.Idents.get("insertObject"),
         &Ctx.Idents.get("atIndex")
       };
-      Sel = Ctx.Selectors.getSelector(2, Idents);
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
       break;
     }
     case NSMutableArr_setObjectAtIndexedSubscript: {
-      IdentifierInfo *Idents[] = {
+      IdentifierInfo *KeyIdents[] = {
         &Ctx.Idents.get("setObject"),
         &Ctx.Idents.get("atIndexedSubscript")
       };
-      Sel = Ctx.Selectors.getSelector(2, Idents);
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
       break;
     }
     }
@@ -224,6 +224,22 @@ Selector NSAPI::getNSDictionarySelector(
     case NSMutableDict_setObjectForKey: {
       IdentifierInfo *KeyIdents[] = {
         &Ctx.Idents.get("setObject"),
+        &Ctx.Idents.get("forKey")
+      };
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      break;
+    }
+    case NSMutableDict_setObjectForKeyedSubscript: {
+      IdentifierInfo *KeyIdents[] = {
+        &Ctx.Idents.get("setObject"),
+        &Ctx.Idents.get("forKeyedSubscript")
+      };
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      break;
+    }
+    case NSMutableDict_setValueForKey: {
+      IdentifierInfo *KeyIdents[] = {
+        &Ctx.Idents.get("setValue"),
         &Ctx.Idents.get("forKey")
       };
       Sel = Ctx.Selectors.getSelector(2, KeyIdents);
