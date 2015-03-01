@@ -33,9 +33,10 @@ public:
     ClassId_NSMutableArray,
     ClassId_NSDictionary,
     ClassId_NSMutableDictionary,
-    ClassId_NSNumber
+    ClassId_NSNumber,
+    ClassId_NSMutableSet
   };
-  static const unsigned NumClassIds = 7;
+  static const unsigned NumClassIds = 8;
 
   enum NSStringMethodKind {
     NSStr_stringWithString,
@@ -67,7 +68,8 @@ public:
     return isObjCEnumerator(E, "NSASCIIStringEncoding",NSASCIIStringEncodingId);
   }
 
-  /// \brief Enumerates the NSArray methods used to generate literals.
+  /// \brief Enumerates the NSArray/NSMutableArray methods used to generate
+  /// literals and to apply some checks.
   enum NSArrayMethodKind {
     NSArr_array,
     NSArr_arrayWithArray,
@@ -90,7 +92,8 @@ public:
   /// \brief Return NSArrayMethodKind if \p Sel is such a selector.
   Optional<NSArrayMethodKind> getNSArrayMethodKind(Selector Sel);
 
-  /// \brief Enumerates the NSDictionary methods used to generate literals.
+  /// \brief Enumerates the NSDictionary/NSMutableDictionary methods used
+  /// to generate literals and to apply some checks.
   enum NSDictionaryMethodKind {
     NSDict_dictionary,
     NSDict_dictionaryWithDictionary,
@@ -113,6 +116,18 @@ public:
 
   /// \brief Return NSDictionaryMethodKind if \p Sel is such a selector.
   Optional<NSDictionaryMethodKind> getNSDictionaryMethodKind(Selector Sel);
+  
+  /// \brief Enumerates the NSMutableSet methods used to apply some checks.
+  enum NSSetMethodKind {
+    NSSet_addObject
+  };
+  static const unsigned NumNSSetMethods = 1;
+  
+  /// \brief The Objective-C NSSet selectors.
+  Selector getNSSetSelector(NSSetMethodKind MK) const;
+  
+  /// \brief Return NSSetMethodKind if \p Sel is such a selector.
+  Optional<NSSetMethodKind> getNSSetMethodKind(Selector Sel);
 
   /// \brief Returns selector for "objectForKeyedSubscript:".
   Selector getObjectForKeyedSubscriptSelector() const {
@@ -211,6 +226,9 @@ private:
 
   /// \brief The selectors for Objective-C NSDictionary methods.
   mutable Selector NSDictionarySelectors[NumNSDictionaryMethods];
+  
+  /// \brief The selectors for Objective-C NSSet methods.
+  mutable Selector NSSetSelectors[NumNSSetMethods];
 
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   mutable Selector NSNumberClassSelectors[NumNSNumberLiteralMethods];

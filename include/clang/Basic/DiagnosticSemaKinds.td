@@ -5264,7 +5264,7 @@ def err_objc_object_catch : Error<
 def err_incomplete_type_objc_at_encode : Error<
   "'@encode' of incomplete type %0">;
 def warn_objc_self_ref_collection : Warning<
-  "attempt to insert %select{array|dictionary}0 into itself">,
+  "attempt to insert %select{array|dictionary|set|ordered set}0 into itself">,
   InGroup<DiagGroup<"objc-self-ref-collection">>;
 
 def warn_setter_getter_impl_required : Warning<

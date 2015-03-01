@@ -682,12 +682,30 @@ public:
 
   /// \brief The declaration of the Objective-C NSArray class.
   ObjCInterfaceDecl *NSArrayDecl;
+  
+  /// \brief The declaration of the Objective-C NSMutableArray class.
+  ObjCInterfaceDecl *NSMutableArrayDecl;
+  
+  /// \brief Pointer to NSMutableArray type (NSMutableArray *).
+  QualType NSMutableArrayPointer;
 
   /// \brief The declaration of the arrayWithObjects:count: method.
   ObjCMethodDecl *ArrayWithObjectsMethod;
 
   /// \brief The declaration of the Objective-C NSDictionary class.
   ObjCInterfaceDecl *NSDictionaryDecl;
+  
+  /// \brief The declaration of the Objective-C NSMutableDictionary class.
+  ObjCInterfaceDecl *NSMutableDictionaryDecl;
+  
+  /// \brief Pointer to NSMutableDictionary type (NSMutableDictionary *).
+  QualType NSMutableDictionaryPointer;
+  
+  /// \brief The declaration of the Objective-C NSMutableSet class.
+  ObjCInterfaceDecl *NSMutableSetDecl;
+  
+  /// \brief Pointer to NSMutableSet type (NSMutableSet *).
+  QualType NSMutableSetPointer;
 
   /// \brief The declaration of the dictionaryWithObjects:forKeys:count: method.
   ObjCMethodDecl *DictionaryWithObjectsMethod;
@@ -8646,7 +8664,7 @@ private:
   void CheckBreakContinueBinding(Expr *E);
   
   /// \brief Check whether receiver is mutable ObjC collection which
-  /// attempts to add himself into this collection
+  /// attempts to add itself into the collection
   void CheckObjCSelfRefCollection(ObjCMessageExpr *Message);
 
 public:

@@ -27,7 +27,8 @@ IdentifierInfo *NSAPI::getNSClassId(NSClassIdKindKind K) const {
     "NSMutableArray",
     "NSDictionary",
     "NSMutableDictionary",
-    "NSNumber"
+    "NSNumber",
+    "NSMutableSet"
   };
 
   if (!ClassIds[K])
@@ -260,6 +261,31 @@ NSAPI::getNSDictionaryMethodKind(Selector Sel) {
       return MK;
   }
 
+  return None;
+}
+
+Selector NSAPI::getNSSetSelector(NSSetMethodKind MK) const {
+  if (NSSetSelectors[MK].isNull()) {
+    Selector Sel;
+    switch (MK) {
+    case NSSet_addObject:
+      Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("addObject"));
+      break;
+    }
+    return (NSSetSelectors[MK] = Sel);
+  }
+  
+  return NSSetSelectors[MK];
+}
+
+Optional<NSAPI::NSSetMethodKind>
+NSAPI::getNSSetMethodKind(Selector Sel) {
+  for (unsigned i = 0; i != NumNSSetMethods; ++i) {
+    NSSetMethodKind MK = NSSetMethodKind(i);
+    if (Sel == getNSSetSelector(MK))
+      return MK;
+  }
+  
   return None;
 }
 

@@ -8187,7 +8187,27 @@ static bool isSetterLikeSelector(Selector sel) {
   return !isLowercase(str.front());
 }
 
-Optional<int> GetNSMutableArrayIndex(const Sema &S, const Selector Sel) {
+Optional<int> GetNSMutableArrayIndex(Sema &S, ObjCMessageExpr *Message) {
+
+  if (!S.NSMutableArrayDecl) {
+    IdentifierInfo *NSMutableArrayId =
+      S.NSAPIObj->getNSClassId(NSAPI::ClassId_NSMutableArray);
+    NamedDecl *IF = S.LookupSingleName(S.TUScope, NSMutableArrayId,
+                                       Message->getLocStart(),
+                                       Sema::LookupOrdinaryName);
+    S.NSMutableArrayDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+    QualType NSMutableArrayObject =
+      S.Context.getObjCInterfaceType(S.NSMutableArrayDecl);
+    S.NSMutableArrayPointer =
+      S.Context.getObjCObjectPointerType(NSMutableArrayObject);
+  }
+  
+  if (S.NSMutableArrayPointer != Message->getReceiverType()) {
+    return None;
+  }
+  
+  Selector Sel = Message->getSelector();
+  
   Optional<NSAPI::NSArrayMethodKind> MKOpt =
     S.NSAPIObj->getNSArrayMethodKind(Sel);
   if (!MKOpt) {
@@ -8211,7 +8231,27 @@ Optional<int> GetNSMutableArrayIndex(const Sema &S, const Selector Sel) {
   return None;
 }
 
-Optional<int> GetNSMutableDictionaryIndex(const Sema &S, const Selector Sel) {
+Optional<int> GetNSMutableDictionaryIndex(Sema &S, ObjCMessageExpr *Message) {
+  
+  if (!S.NSMutableDictionaryDecl) {
+    IdentifierInfo *NSMutableDictionaryId =
+      S.NSAPIObj->getNSClassId(NSAPI::ClassId_NSMutableDictionary);
+    NamedDecl *IF = S.LookupSingleName(S.TUScope, NSMutableDictionaryId,
+                                       Message->getLocStart(),
+                                       Sema::LookupOrdinaryName);
+    S.NSMutableDictionaryDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+    QualType NSMutableDictionaryObject =
+      S.Context.getObjCInterfaceType(S.NSMutableDictionaryDecl);
+    S.NSMutableDictionaryPointer =
+      S.Context.getObjCObjectPointerType(NSMutableDictionaryObject);
+  }
+  
+  if (S.NSMutableDictionaryPointer != Message->getReceiverType()) {
+    return None;
+  }
+  
+  Selector Sel = Message->getSelector();
+  
   Optional<NSAPI::NSDictionaryMethodKind> MKOpt =
     S.NSAPIObj->getNSDictionaryMethodKind(Sel);
   if (!MKOpt) {
@@ -8233,19 +8273,55 @@ Optional<int> GetNSMutableDictionaryIndex(const Sema &S, const Selector Sel) {
   return None;
 }
 
+Optional<int> GetNSMutableSetIndex(Sema &S, ObjCMessageExpr *Message) {
+  
+  if (!S.NSMutableSetDecl) {
+    IdentifierInfo *NSMutableSetId =
+      S.NSAPIObj->getNSClassId(NSAPI::ClassId_NSMutableSet);
+    NamedDecl *IF = S.LookupSingleName(S.TUScope, NSMutableSetId,
+                                       Message->getLocStart(),
+                                       Sema::LookupOrdinaryName);
+    S.NSMutableSetDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+    QualType NSMutableSetObject =
+      S.Context.getObjCInterfaceType(S.NSMutableSetDecl);
+    S.NSMutableSetPointer =
+      S.Context.getObjCObjectPointerType(NSMutableSetObject);
+  }
+  
+  if (S.NSMutableSetPointer != Message->getReceiverType()) {
+    return None;
+  }
+  
+  Selector Sel = Message->getSelector();
+  
+  Optional<NSAPI::NSSetMethodKind> MKOpt =
+    S.NSAPIObj->getNSSetMethodKind(Sel);
+  if (!MKOpt) {
+    return None;
+  }
+  
+  NSAPI::NSSetMethodKind MK = *MKOpt;
+  if (MK == NSAPI::NSSet_addObject) {
+    return 0;
+  }
+  
+  return None;
+}
+
 void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
   if (!Message->isInstanceMessage()) {
     return;
   }
   
-  Selector Sel = Message->getMethodDecl()->getSelector();
   Optional<int> ArgOpt;
   int Select = 0;
   
-  if ((ArgOpt = GetNSMutableArrayIndex(*this, Sel))) {
+  if ((ArgOpt = GetNSMutableArrayIndex(*this, Message))) {
     Select = 0;
-  } else if ((ArgOpt = GetNSMutableDictionaryIndex(*this, Sel))) {
+  } else if ((ArgOpt = GetNSMutableDictionaryIndex(*this, Message))) {
     Select = 1;
+  } else if ((ArgOpt = GetNSMutableSetIndex(*this, Message))) {
+    Select = 2;
   } else {
     return;
   }
