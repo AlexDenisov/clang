@@ -35,9 +35,10 @@ public:
     ClassId_NSMutableDictionary,
     ClassId_NSNumber,
     ClassId_NSMutableSet,
-    ClassId_NSCountedSet
+    ClassId_NSCountedSet,
+    ClassId_NSMutableOrderedSet,
   };
-  static const unsigned NumClassIds = 9;
+  static const unsigned NumClassIds = 10;
 
   enum NSStringMethodKind {
     NSStr_stringWithString,
@@ -120,9 +121,13 @@ public:
   
   /// \brief Enumerates the NSMutableSet methods used to apply some checks.
   enum NSSetMethodKind {
-    NSSet_addObject
+    NSMutableSet_addObject,
+    NSOrderedSet_insertObjectAtIndex,
+    NSOrderedSet_setObjectAtIndex,
+    NSOrderedSet_setObjectAtIndexedSubscript,
+    NSOrderedSet_replaceObjectAtIndexWithObject
   };
-  static const unsigned NumNSSetMethods = 1;
+  static const unsigned NumNSSetMethods = 5;
   
   /// \brief The Objective-C NSSet selectors.
   Selector getNSSetSelector(NSSetMethodKind MK) const;

@@ -29,7 +29,8 @@ IdentifierInfo *NSAPI::getNSClassId(NSClassIdKindKind K) const {
     "NSMutableDictionary",
     "NSNumber",
     "NSMutableSet",
-    "NSCountedSet"
+    "NSCountedSet",
+    "NSMutableOrderedSet"
   };
 
   if (!ClassIds[K])
@@ -269,9 +270,41 @@ Selector NSAPI::getNSSetSelector(NSSetMethodKind MK) const {
   if (NSSetSelectors[MK].isNull()) {
     Selector Sel;
     switch (MK) {
-    case NSSet_addObject:
+    case NSMutableSet_addObject:
       Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("addObject"));
       break;
+    case NSOrderedSet_insertObjectAtIndex: {
+      IdentifierInfo *KeyIdents[] = {
+        &Ctx.Idents.get("insertObject"),
+        &Ctx.Idents.get("atIndex")
+      };
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      break;
+    }
+    case NSOrderedSet_setObjectAtIndex: {
+      IdentifierInfo *KeyIdents[] = {
+        &Ctx.Idents.get("setObject"),
+        &Ctx.Idents.get("atIndex")
+      };
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      break;
+    }
+    case NSOrderedSet_setObjectAtIndexedSubscript: {
+      IdentifierInfo *KeyIdents[] = {
+        &Ctx.Idents.get("setObject"),
+        &Ctx.Idents.get("atIndexedSubscript")
+      };
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      break;
+    }
+    case NSOrderedSet_replaceObjectAtIndexWithObject: {
+      IdentifierInfo *KeyIdents[] = {
+        &Ctx.Idents.get("replaceObjectAtIndex"),
+        &Ctx.Idents.get("withObject")
+      };
+      Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      break;
+    }
     }
     return (NSSetSelectors[MK] = Sel);
   }

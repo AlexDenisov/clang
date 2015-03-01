@@ -712,6 +712,12 @@ public:
   
   /// \brief Pointer to NSCountedSet type (NSCountedSet *).
   QualType NSCountedSetPointer;
+  
+  /// \brief The declaration of the Objective-C NSMutableOrderedSet class.
+  ObjCInterfaceDecl *NSMutableOrderedSetDecl;
+  
+  /// \brief Pointer to NSMutableOrderedSet type (NSMutableOrderedSet *).
+  QualType NSMutableOrderedSetPointer;
 
   /// \brief The declaration of the dictionaryWithObjects:forKeys:count: method.
   ObjCMethodDecl *DictionaryWithObjectsMethod;
