@@ -12,11 +12,27 @@ typedef long int NSUInteger;
 
 @end
 
-@interface Wrapper
+@interface SelfRefClass 
+{
+  NSMutableArray *_array;
+}
+@end
 
-@property NSMutableArray *array;
+@implementation SelfRefClass
+
+- (void)check {
+  [_array addObject:_array]; // expected-warning {{attempt to insert array into itself}}
+}
+
+- (void)checkNSMutableArray:(NSMutableArray *)array {
+  [array addObject:array]; // expected-warning {{attempt to insert array into itself}}
+}
 
 @end
+
+void checkNSMutableArrayParam(NSMutableArray *_param) {
+  [_param addObject:_param]; // expected-warning {{attempt to insert array into itself}}
+}
 
 void checkNSMutableArray() {
   NSMutableArray *array = nil;

@@ -8190,10 +8190,6 @@ static bool isSetterLikeSelector(Selector sel) {
 bool IsNSMutableArrayMethod(const Sema &S,
                             const ObjCMethodDecl *Method,
                             int *ArgIndex) {
-  if (!Method) {
-    return false;
-  }
-
   Selector Sel = Method->getSelector();
   Optional<NSAPI::NSArrayMethodKind> MKOpt =
     S.NSAPIObj->getNSArrayMethodKind(Sel);
@@ -8233,25 +8229,35 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     return;
   }
   
-  Expr *Receiver = Message->getInstanceReceiver();
+  Expr *Receiver = Message->getInstanceReceiver()->IgnoreImpCasts();
   if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Receiver)) {
-    Receiver = OE->getSourceExpr();
+    Receiver = OE->getSourceExpr()->IgnoreImpCasts();
   }
   
   Expr *Arg = Message->getArg(ArgIndex)->IgnoreImpCasts();
   if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Arg)) {
-    Arg = OE->getSourceExpr();
+    Arg = OE->getSourceExpr()->IgnoreImpCasts();
   }
   
-  DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver->IgnoreImpCasts());
-  DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg);
-  
-  if (ReceiverRE && ArgRE) {
-    if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
-      Diag(Message->getSourceRange().getBegin(),
-           diag::warn_objc_self_ref_collection);
+  if (DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver)) {
+    if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
+      if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+        Diag(Message->getSourceRange().getBegin(),
+             diag::warn_objc_self_ref_collection);
+        return;
+      }
     }
   }
+  
+  if (ObjCIvarRefExpr *ReceiverRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
+    if (ObjCIvarRefExpr *ArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
+      if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+        Diag(Message->getSourceRange().getBegin(),
+             diag::warn_objc_self_ref_collection);
+      }
+    }
+  }
+
 }
 
 /// Check a message send to see if it's likely to cause a retain cycle.
