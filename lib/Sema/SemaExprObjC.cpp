@@ -2800,7 +2800,7 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
     }
   }
   
-  CheckObjCSelfRefCollection(Result);
+  CheckObjCCircularContainer(Result);
   
   return MaybeBindToTemporary(Result);
 }

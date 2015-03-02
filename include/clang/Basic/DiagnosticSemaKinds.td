@@ -5263,9 +5263,9 @@ def err_objc_object_catch : Error<
   "can't catch an Objective-C object by value">;
 def err_incomplete_type_objc_at_encode : Error<
   "'@encode' of incomplete type %0">;
-def warn_objc_self_ref_collection : Warning<
-  "attempt to insert %select{array|dictionary|set|counted set|ordered set}0 into itself">,
-  InGroup<DiagGroup<"objc-self-ref-collection">>;
+def warn_objc_circular_container : Warning<
+  "adding '%0' to '%0' might cause circular dependency in container">,
+  InGroup<DiagGroup<"objc-circular-container">>;
 
 def warn_setter_getter_impl_required : Warning<
   "property %0 requires method %1 to be defined - "

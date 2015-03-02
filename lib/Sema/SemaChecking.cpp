@@ -8383,25 +8383,18 @@ Optional<int> GetNSOrderedSetIndex(Sema &S, ObjCMessageExpr *Message) {
   return None;
 }
 
-void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
+void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
   if (!Message->isInstanceMessage()) {
     return;
   }
   
   Optional<int> ArgOpt;
-  int Select = 0;
   
-  if ((ArgOpt = GetNSMutableArrayIndex(*this, Message))) {
-    Select = 0;
-  } else if ((ArgOpt = GetNSMutableDictionaryIndex(*this, Message))) {
-    Select = 1;
-  } else if ((ArgOpt = GetNSMutableSetIndex(*this, Message))) {
-    Select = 2;
-  } else if ((ArgOpt = GetNSCountedSetIndex(*this, Message))) {
-    Select = 3;
-  } else if ((ArgOpt = GetNSOrderedSetIndex(*this, Message))) {
-    Select = 4;
-  } else {
+  if (!(ArgOpt = GetNSMutableArrayIndex(*this, Message)) &&
+      !(ArgOpt = GetNSMutableDictionaryIndex(*this, Message)) &&
+      !(ArgOpt = GetNSMutableSetIndex(*this, Message)) &&
+      !(ArgOpt = GetNSCountedSetIndex(*this, Message)) &&
+      !(ArgOpt = GetNSOrderedSetIndex(*this, Message))) {
     return;
   }
   
@@ -8421,7 +8414,8 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
       if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
         Diag(Message->getSourceRange().getBegin(),
-             diag::warn_objc_self_ref_collection) << Select;
+             diag::warn_objc_circular_container)
+          << ArgRE->getDecl()->getName();
         return;
       }
     }
@@ -8431,7 +8425,8 @@ void Sema::CheckObjCSelfRefCollection(ObjCMessageExpr *Message) {
     if (ObjCIvarRefExpr *ArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
       if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
         Diag(Message->getSourceRange().getBegin(),
-             diag::warn_objc_self_ref_collection) << Select;
+             diag::warn_objc_circular_container)
+          << ArgRE->getDecl()->getName();
       }
     }
   }

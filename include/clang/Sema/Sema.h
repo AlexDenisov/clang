@@ -8675,9 +8675,9 @@ private:
   /// statement that produces control flow different from GCC.
   void CheckBreakContinueBinding(Expr *E);
   
-  /// \brief Check whether receiver is mutable ObjC collection which
-  /// attempts to add itself into the collection
-  void CheckObjCSelfRefCollection(ObjCMessageExpr *Message);
+  /// \brief Check whether receiver is mutable ObjC container which
+  /// attempts to add itself into the container
+  void CheckObjCCircularContainer(ObjCMessageExpr *Message);
 
 public:
   /// \brief Register a magic integral constant to be used as a type tag.
