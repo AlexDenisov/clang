@@ -682,10 +682,7 @@ public:
 
   /// \brief The declaration of the Objective-C NSArray class.
   ObjCInterfaceDecl *NSArrayDecl;
-  
-  /// \brief The declaration of the Objective-C NSMutableArray class.
-  ObjCInterfaceDecl *NSMutableArrayDecl;
-  
+
   /// \brief Pointer to NSMutableArray type (NSMutableArray *).
   QualType NSMutableArrayPointer;
 
@@ -694,28 +691,16 @@ public:
 
   /// \brief The declaration of the Objective-C NSDictionary class.
   ObjCInterfaceDecl *NSDictionaryDecl;
-  
-  /// \brief The declaration of the Objective-C NSMutableDictionary class.
-  ObjCInterfaceDecl *NSMutableDictionaryDecl;
-  
+
   /// \brief Pointer to NSMutableDictionary type (NSMutableDictionary *).
   QualType NSMutableDictionaryPointer;
-  
-  /// \brief The declaration of the Objective-C NSMutableSet class.
-  ObjCInterfaceDecl *NSMutableSetDecl;
-  
+
   /// \brief Pointer to NSMutableSet type (NSMutableSet *).
   QualType NSMutableSetPointer;
-  
-  /// \brief The declaration of the Objective-C NSCountedSet class.
-  ObjCInterfaceDecl *NSCountedSetDecl;
-  
+
   /// \brief Pointer to NSCountedSet type (NSCountedSet *).
   QualType NSCountedSetPointer;
-  
-  /// \brief The declaration of the Objective-C NSMutableOrderedSet class.
-  ObjCInterfaceDecl *NSMutableOrderedSetDecl;
-  
+
   /// \brief Pointer to NSMutableOrderedSet type (NSMutableOrderedSet *).
   QualType NSMutableOrderedSetPointer;
 
@@ -8674,7 +8659,7 @@ private:
   /// \brief Check if the given expression contains 'break' or 'continue'
   /// statement that produces control flow different from GCC.
   void CheckBreakContinueBinding(Expr *E);
-  
+
   /// \brief Check whether receiver is mutable ObjC container which
   /// attempts to add itself into the container
   void CheckObjCCircularContainer(ObjCMessageExpr *Message);

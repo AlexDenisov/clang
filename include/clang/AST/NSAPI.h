@@ -118,8 +118,9 @@ public:
 
   /// \brief Return NSDictionaryMethodKind if \p Sel is such a selector.
   Optional<NSDictionaryMethodKind> getNSDictionaryMethodKind(Selector Sel);
-  
-  /// \brief Enumerates the NSMutableSet methods used to apply some checks.
+
+  /// \brief Enumerates the NSMutableSet/NSOrderedSet methods used
+  /// to apply some checks.
   enum NSSetMethodKind {
     NSMutableSet_addObject,
     NSOrderedSet_insertObjectAtIndex,
@@ -128,10 +129,10 @@ public:
     NSOrderedSet_replaceObjectAtIndexWithObject
   };
   static const unsigned NumNSSetMethods = 5;
-  
+
   /// \brief The Objective-C NSSet selectors.
   Selector getNSSetSelector(NSSetMethodKind MK) const;
-  
+
   /// \brief Return NSSetMethodKind if \p Sel is such a selector.
   Optional<NSSetMethodKind> getNSSetMethodKind(Selector Sel);
 
@@ -232,7 +233,7 @@ private:
 
   /// \brief The selectors for Objective-C NSDictionary methods.
   mutable Selector NSDictionarySelectors[NumNSDictionaryMethods];
-  
+
   /// \brief The selectors for Objective-C NSSet methods.
   mutable Selector NSSetSelectors[NumNSSetMethods];
 

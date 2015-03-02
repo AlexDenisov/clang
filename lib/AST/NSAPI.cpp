@@ -147,7 +147,6 @@ Selector NSAPI::getNSArraySelector(NSArrayMethodKind MK) const {
       break;
     }
     }
-
     return (NSArraySelectors[MK] = Sel);
   }
 
@@ -308,7 +307,7 @@ Selector NSAPI::getNSSetSelector(NSSetMethodKind MK) const {
     }
     return (NSSetSelectors[MK] = Sel);
   }
-  
+
   return NSSetSelectors[MK];
 }
 
@@ -319,7 +318,7 @@ NSAPI::getNSSetMethodKind(Selector Sel) {
     if (Sel == getNSSetSelector(MK))
       return MK;
   }
-  
+
   return None;
 }
 

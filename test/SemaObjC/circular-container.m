@@ -41,7 +41,7 @@ typedef long int NSUInteger;
 
 @end
 
-@interface SelfRefClass 
+@interface SelfRefClass
 {
   NSMutableArray *_array;
   NSMutableDictionary *_dictionary;
