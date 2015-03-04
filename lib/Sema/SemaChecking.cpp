@@ -8392,20 +8392,25 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
   if (DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver)) {
     if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
       if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+        ValueDecl *Decl = ReceiverRE->getDecl();
         Diag(Message->getSourceRange().getBegin(),
              diag::warn_objc_circular_container)
-          << ArgRE->getDecl()->getName();
-        return;
+          << Decl->getName();
+        Diag(Decl->getLocation(),
+             diag::note_objc_circular_container_declared_here)
+          << Decl->getName();
       }
     }
-  }
-
-  if (ObjCIvarRefExpr *ReceiverRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
-    if (ObjCIvarRefExpr *ArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
-      if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+  } else if (ObjCIvarRefExpr *IvarRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
+    if (ObjCIvarRefExpr *IvarArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
+      if (IvarRE->getDecl() == IvarArgRE->getDecl()) {
+        ObjCIvarDecl *Decl = IvarRE->getDecl();
         Diag(Message->getSourceRange().getBegin(),
              diag::warn_objc_circular_container)
-          << ArgRE->getDecl()->getName();
+          << Decl->getName();
+        Diag(Decl->getLocation(),
+             diag::note_objc_circular_container_declared_here)
+          << Decl->getName();
       }
     }
   }
