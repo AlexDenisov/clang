@@ -3990,6 +3990,24 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
                                  Attr.getAttributeSpellingListIndex()));
 }
 
+static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
+  RecordDecl *RD;
+  if (TypedefDecl *TD = dyn_cast<TypedefDecl>(D)) {
+    const RecordType *RT = TD->getUnderlyingType().getDesugaredType(S.Context)->getAs<RecordType>();
+    RD = RT->getDecl();
+  } else {
+    RD = dyn_cast<RecordDecl>(D);
+  }
+
+  if (RD) {
+    RD->setObjCBoxable();
+  }
+
+  D->addAttr(::new (S.Context)
+             ObjCBoxableAttr(Attr.getRange(), S.Context,
+                             Attr.getAttributeSpellingListIndex()));
+}
+
 static void handleObjCOwnershipAttr(Sema &S, Decl *D,
                                     const AttributeList &Attr) {
   if (hasDeclarator(D)) return;
@@ -4757,6 +4775,10 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
 
   case AttributeList::AT_ObjCRuntimeName:
     handleObjCRuntimeName(S, D, Attr);
+    break;
+
+  case AttributeList::AT_ObjCBoxable:
+    handleObjCBoxable(S, D, Attr);
     break;
           
   case AttributeList::AT_CFAuditedTransfer:

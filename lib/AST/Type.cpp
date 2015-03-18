@@ -364,6 +364,11 @@ bool Type::isStructureType() const {
     return RT->getDecl()->isStruct();
   return false;
 }
+bool Type::isObjCBoxableStructureType() const {
+  if (const RecordType *RT = getAs<RecordType>())
+    return RT->getDecl()->isStruct() && RT->getDecl()->isObjCBoxable();
+  return false;
+}
 bool Type::isInterfaceType() const {
   if (const RecordType *RT = getAs<RecordType>())
     return RT->getDecl()->isInterface();

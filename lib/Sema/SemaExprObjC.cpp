@@ -653,11 +653,10 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       BoxingMethod = StringWithUTF8StringMethod;
       BoxedType = NSStringPointer;
     }
-  } else if (ValueType->isStructureType()) {
-    // Limited support for structure types, such as NSRange,
-    // NS/CG Rect, Size, Point and NSEdgeInsets.
-    
-    // Look for the appropriate method within NSValue.
+  } else if (ValueType->isObjCBoxableStructureType()) {
+    // Support for structure types, that marked as objc_boxable
+    // struct s { ... } __attribute__((objc_boxable));
+
     BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
     BoxedType = NSValuePointer;
   }
