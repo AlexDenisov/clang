@@ -1,36 +1,40 @@
 // RUN: %clang_cc1  -fsyntax-only -triple x86_64-apple-macosx10.9 -verify %s
 
+#define BOXABLE __attribute__((objc_boxable))
+
 typedef struct _NSPoint {
   int dummy;
-} NSPoint;
+} NSPoint BOXABLE;
 
 typedef struct _NSSize {
   int dummy;
-} NSSize;
+} NSSize BOXABLE;
 
 typedef struct _NSRect {
   int dummy;
-} NSRect;
+} NSRect BOXABLE;
 
 typedef struct _CGPoint {
   int dummy;
-} CGPoint;
+} CGPoint BOXABLE;
 
 typedef struct _CGSize {
   int dummy;
-} CGSize;
+} CGSize BOXABLE;
 
 typedef struct _CGRect {
   int dummy;
-} CGRect;
+} CGRect BOXABLE;
 
 typedef struct _NSRange {
   int dummy;
-} NSRange;
+} NSRange BOXABLE;
 
 typedef struct _NSEdgeInsets {
   int dummy;
 } NSEdgeInsets;
+
+BOXABLE typedef struct _NSEdgeInsets NSEdgeInsets;
 
 typedef struct _SomeStruct {
   double d;
@@ -43,17 +47,9 @@ void checkNSValueDiagnostic() {
 }
 
 @interface NSValue
-+ (NSValue *)valueWithPoint:(NSPoint)point;
-+ (NSValue *)valueWithSize:(NSSize)size;
-+ (NSValue *)valueWithRect:(NSRect)rect;
 
-+ (NSValue *)valueWithCGPoint:(CGPoint)point;
-+ (NSValue *)valueWithCGSize:(CGSize)size;
-+ (NSValue *)valueWithCGRect:(CGRect)rect;
++ (NSValue *)valueWithBytes:(const void *)value objCType:(const char *)type;
 
-+ (NSValue *)valueWithRange:(NSRange)range;
-
-+ (NSValue *)valueWithEdgeInsets:(NSEdgeInsets)insets __attribute__((availability(macosx, introduced=10.10)));
 @end
 
 int main() {

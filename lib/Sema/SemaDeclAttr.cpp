@@ -3991,9 +3991,9 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
 }
 
 static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
-  RecordDecl *RD;
+  RecordDecl *RD = nullptr;
   if (TypedefDecl *TD = dyn_cast<TypedefDecl>(D)) {
-    const RecordType *RT = TD->getUnderlyingType().getDesugaredType(S.Context)->getAs<RecordType>();
+    const RecordType *RT = TD->getUnderlyingType()->getAs<RecordType>();
     RD = RT->getDecl();
   } else {
     RD = dyn_cast<RecordDecl>(D);

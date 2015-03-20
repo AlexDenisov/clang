@@ -186,27 +186,11 @@ public:
   };
   static const unsigned NumNSNumberLiteralMethods = 15;
 
-  /// \brief Enumerates the NSValue methods used to generate literals.
-  enum NSValueLiteralMethodKind {
-    NSValueWithPoint,
-    NSValueWithSize,
-    NSValueWithRect,
-    NSValueWithCGPoint,
-    NSValueWithCGSize,
-    NSValueWithCGRect,
-    NSValueWithRange,
-    NSValueWithEdgeInsets
-  };
-  static const unsigned NumNSValueLiteralMethods = 8;
-
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   /// \param Instance if true it will return the selector for the init* method
   /// otherwise it will return the selector for the number* method.
   Selector getNSNumberLiteralSelector(NSNumberLiteralMethodKind MK,
                                       bool Instance) const;
-
-  /// \brief The Objective-C NSValue selectors used to create NSValue literals.
-  Selector getNSValueLiteralSelector(NSValueLiteralMethodKind MK) const;
 
   bool isNSNumberLiteralSelector(NSNumberLiteralMethodKind MK,
                                  Selector Sel) const {
@@ -223,33 +207,12 @@ public:
   Optional<NSNumberLiteralMethodKind>
       getNSNumberFactoryMethodKind(QualType T) const;
 
-  /// \brief Determine the appropriate NSValue factory method kind for a
-  /// literal of the given type.
-  Optional<NSValueLiteralMethodKind>
-      getNSValueFactoryMethodKind(QualType T) const;
-
   /// \brief Returns true if \param T is a typedef of "BOOL" in objective-c.
   bool isObjCBOOLType(QualType T) const;
   /// \brief Returns true if \param T is a typedef of "NSInteger" in objective-c.
   bool isObjCNSIntegerType(QualType T) const;
   /// \brief Returns true if \param T is a typedef of "NSUInteger" in objective-c.
   bool isObjCNSUIntegerType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "NSPoint" in objective-c.
-  bool isObjCNSPointType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "NSSize" in objective-c.
-  bool isObjCNSSizeType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "NSRect" in objective-c.
-  bool isObjCNSRectType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "CGPoint" in objective-c.
-  bool isObjCCGPointType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "CGSize" in objective-c.
-  bool isObjCCGSizeType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "CGRect" in objective-c.
-  bool isObjCCGRectType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "NSRange" in objective-c.
-  bool isObjCNSRangeType(QualType T) const;
-  /// \brief Returns true if \param T is a typedef of "NSEdgeInsets" in objective-c.
-  bool isObjCNSEdgeInsetsType(QualType T) const;
   /// \brief Returns one of NSIntegral typedef names if \param T is a typedef
   /// of that name in objective-c.
   StringRef GetNSIntegralKind(QualType T) const;
@@ -282,18 +245,12 @@ private:
   mutable Selector NSNumberClassSelectors[NumNSNumberLiteralMethods];
   mutable Selector NSNumberInstanceSelectors[NumNSNumberLiteralMethods];
 
-  /// \brief The Objective-C NSValue selectors used to create NSValue literals.
-  mutable Selector NSValueClassSelectors[NumNSValueLiteralMethods];
-
   mutable Selector objectForKeyedSubscriptSel, objectAtIndexedSubscriptSel,
                    setObjectForKeyedSubscriptSel,setObjectAtIndexedSubscriptSel,
                    isEqualSel;
 
   mutable IdentifierInfo *BOOLId, *NSIntegerId, *NSUIntegerId;
   mutable IdentifierInfo *NSASCIIStringEncodingId, *NSUTF8StringEncodingId;
-  mutable IdentifierInfo *NSPointId, *NSSizeId, *NSRectId;
-  mutable IdentifierInfo *CGPointId, *CGSizeId, *CGRectId;
-  mutable IdentifierInfo *NSRangeId, *NSEdgeInsetsId;
 };
 
 }  // end namespace clang

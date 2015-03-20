@@ -257,86 +257,6 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
   return Method;
 }
 
-/// \brief Retrieve the NSValue factory method that should be used to create
-/// an Objective-C literal for the given type.
-static ObjCMethodDecl *getNSValueFactoryMethod(Sema &S, SourceLocation Loc,
-                                               QualType ValueType) {
-  Optional<NSAPI::NSValueLiteralMethodKind> Kind =
-  S.NSAPIObj->getNSValueFactoryMethodKind(ValueType);
-
-  if (!Kind) {
-    return nullptr;
-  }
-
-  // If we already looked up this method, we're done.
-  if (S.NSValueLiteralMethods[*Kind])
-    return S.NSValueLiteralMethods[*Kind];
-
-  Selector Sel = S.NSAPIObj->getNSValueLiteralSelector(*Kind);
-
-  ASTContext &CX = S.Context;
-
-  // Look up the NSValue class, if we haven't done so already. It's cached
-  // in the Sema instance.
-  if (!S.NSValueDecl) {
-    IdentifierInfo *NSValueId =
-    S.NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
-    NamedDecl *IF = S.LookupSingleName(S.TUScope, NSValueId,
-                                       Loc, Sema::LookupOrdinaryName);
-    S.NSValueDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
-    if (!S.NSValueDecl) {
-      if (S.getLangOpts().DebuggerObjCLiteral) {
-        // Create a stub definition of NSValue.
-        S.NSValueDecl = ObjCInterfaceDecl::Create(CX,
-                                                  CX.getTranslationUnitDecl(),
-                                                  SourceLocation(), NSValueId,
-                                                  nullptr, SourceLocation());
-      } else {
-        // Otherwise, require a declaration of NSValue.
-        S.Diag(Loc, diag::err_undeclared_nsvalue);
-        return nullptr;
-      }
-    } else if (!S.NSValueDecl->hasDefinition()) {
-      S.Diag(Loc, diag::err_undeclared_nsvalue);
-      return nullptr;
-    }
-
-    // generate the pointer to NSValue type.
-    QualType NSValueObject = CX.getObjCInterfaceType(S.NSValueDecl);
-    S.NSValuePointer = CX.getObjCObjectPointerType(NSValueObject);
-  }
-
-  // Look for the appropriate method within NSValue.
-  ObjCMethodDecl *Method = S.NSValueDecl->lookupClassMethod(Sel);
-  if (!Method && S.getLangOpts().DebuggerObjCLiteral) {
-    // create a stub definition this NSValue factory method.
-    TypeSourceInfo *ReturnTInfo = nullptr;
-    Method =
-    ObjCMethodDecl::Create(CX, SourceLocation(), SourceLocation(), Sel,
-                           S.NSValuePointer, ReturnTInfo, S.NSValueDecl,
-                           /*isInstance=*/false, /*isVariadic=*/false,
-                           /*isPropertyAccessor=*/false,
-                           /*isImplicitlyDeclared=*/true,
-                           /*isDefined=*/false, ObjCMethodDecl::Required,
-                           /*HasRelatedResultType=*/false);
-    ParmVarDecl *value = ParmVarDecl::Create(S.Context, Method,
-                                             SourceLocation(), SourceLocation(),
-                                             &CX.Idents.get("value"),
-                                             ValueType, /*TInfo=*/nullptr,
-                                             SC_None, nullptr);
-    Method->setMethodParams(S.Context, value, None);
-  }
-
-  if (!validateBoxingMethod(S, Loc, S.NSValueDecl, Sel, Method))
-    return nullptr;
-
-  // Note: if the parameter type is out-of-line, we'll catch it later in the
-  // implicit conversion.
-
-  S.NSValueLiteralMethods[*Kind] = Method;
-  return Method;
-}
-
 /// BuildObjCNumericLiteral - builds an ObjCBoxedExpr AST node for the
 /// numeric literal expression. Type of the expression will be "NSNumber *".
 ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
@@ -657,7 +577,96 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     // Support for structure types, that marked as objc_boxable
     // struct s { ... } __attribute__((objc_boxable));
 
-    BoxingMethod = getNSValueFactoryMethod(*this, SR.getBegin(), ValueType);
+    // Look up the NSValue class, if we haven't done so already. It's cached
+    // in the Sema instance.
+    if (!NSValueDecl) {
+      IdentifierInfo *NSValueId =
+        NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
+      NamedDecl *IF = LookupSingleName(TUScope, NSValueId,
+                                       SR.getBegin(), Sema::LookupOrdinaryName);
+      NSValueDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+      if (!NSValueDecl) {
+        if (getLangOpts().DebuggerObjCLiteral) {
+          // Create a stub definition of NSValue.
+          DeclContext *TU = Context.getTranslationUnitDecl();
+          NSValueDecl = ObjCInterfaceDecl::Create(Context, TU,
+                                                  SourceLocation(), NSValueId,
+                                                  nullptr, SourceLocation());
+        } else {
+          // Otherwise, require a declaration of NSValue.
+          Diag(SR.getBegin(), diag::err_undeclared_nsvalue);
+          return ExprError();
+        }
+      } else if (!NSValueDecl->hasDefinition()) {
+        Diag(SR.getBegin(), diag::err_undeclared_nsvalue);
+        return ExprError();
+      }
+
+      // generate the pointer to NSValue type.
+      QualType NSValueObject = Context.getObjCInterfaceType(NSValueDecl);
+      NSValuePointer = Context.getObjCObjectPointerType(NSValueObject);
+    }
+
+    if (!ValueWithBytesObjCTypeMethod) {
+      IdentifierInfo *II[] = {
+        &Context.Idents.get("valueWithBytes"),
+        &Context.Idents.get("objCType")
+      };
+      Selector ValueWithBytesObjCType = Context.Selectors.getSelector(2, II);
+
+      // Look for the appropriate method within NSValue.
+      BoxingMethod = NSValueDecl->lookupClassMethod(ValueWithBytesObjCType);
+      if (!BoxingMethod && getLangOpts().DebuggerObjCLiteral) {
+        // Debugger needs to work even if NSString hasn't been defined.
+        TypeSourceInfo *ReturnTInfo = nullptr;
+        ObjCMethodDecl *M = ObjCMethodDecl::Create(
+           Context,
+           SourceLocation(),
+           SourceLocation(),
+           ValueWithBytesObjCType,
+           NSValuePointer,
+           ReturnTInfo,
+           NSValueDecl,
+           /*isInstance=*/false,
+           /*isVariadic=*/false,
+           /*isPropertyAccessor=*/false,
+           /*isImplicitlyDeclared=*/true,
+           /*isDefined=*/false,
+           ObjCMethodDecl::Required,
+           /*HasRelatedResultType=*/false);
+
+        SmallVector<ParmVarDecl *, 2> Params;
+
+        ParmVarDecl *bytes =
+          ParmVarDecl::Create(Context, M,
+                              SourceLocation(), SourceLocation(),
+                              &Context.Idents.get("bytes"),
+                              Context.VoidPtrTy.withConst(),
+                              /*TInfo=*/nullptr,
+                              SC_None, nullptr);
+        Params.push_back(bytes);
+
+        QualType ConstCharType = Context.CharTy.withConst();
+        ParmVarDecl *type =
+          ParmVarDecl::Create(Context, M,
+                              SourceLocation(), SourceLocation(),
+                              &Context.Idents.get("type"),
+                              Context.getPointerType(ConstCharType),
+                              /*TInfo=*/nullptr,
+                              SC_None, nullptr);
+        Params.push_back(type);
+
+        M->setMethodParams(Context, Params, None);
+        BoxingMethod = M;
+      }
+
+      if (!validateBoxingMethod(*this, SR.getBegin(), NSValueDecl,
+                                ValueWithBytesObjCType, BoxingMethod))
+        return ExprError();
+      
+      ValueWithBytesObjCTypeMethod = BoxingMethod;
+    }
+
     BoxedType = NSValuePointer;
   }
 

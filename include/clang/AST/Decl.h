@@ -3307,7 +3307,7 @@ public:
   void setHasVolatileMember (bool val) { HasVolatileMember = val; }
 
   bool isObjCBoxable() const { return ObjCBoxable; }
-  bool setObjCBoxable() { ObjCBoxable = true; }
+  void setObjCBoxable() { ObjCBoxable = true; }
   
   /// \brief Determines whether this declaration represents the
   /// injected class name.
