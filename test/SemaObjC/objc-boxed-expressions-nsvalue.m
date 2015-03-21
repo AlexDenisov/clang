@@ -42,8 +42,7 @@ typedef struct _SomeStruct {
 
 void checkNSValueDiagnostic() {
   NSRect rect;
-  id value = @(rect); // expected-error{{NSValue must be available to use Objective-C boxed expressions}} \
-                      // expected-error{{illegal type 'NSRect' (aka 'struct _NSRect') used in a boxed expression}}
+  id value = @(rect); // expected-error{{NSValue must be available to use Objective-C boxed expressions}}
 }
 
 @interface NSValue

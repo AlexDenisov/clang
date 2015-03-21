@@ -90,22 +90,46 @@ public:
 /// Also used for boxing non-parenthesized numeric literals;
 /// as in: @42 or \@true (c++/objc++) or \@__yes (c/objc).
 class ObjCBoxedExpr : public Expr {
-  Stmt *SubExpr;
+  Stmt **SubExprs;
   ObjCMethodDecl *BoxingMethod;
   SourceRange Range;
+  unsigned NumSubExprs;
 public:
-  ObjCBoxedExpr(Expr *E, QualType T, ObjCMethodDecl *method,
+  ObjCBoxedExpr(ArrayRef<Expr *> Exprs, QualType T, ObjCMethodDecl *method,
                      SourceRange R)
   : Expr(ObjCBoxedExprClass, T, VK_RValue, OK_Ordinary, 
-         E->isTypeDependent(), E->isValueDependent(), 
-         E->isInstantiationDependent(), E->containsUnexpandedParameterPack()), 
-         SubExpr(E), BoxingMethod(method), Range(R) {}
+         false, false, false, false),
+         BoxingMethod(method), Range(R), NumSubExprs(0) {
+           setSubExprs(Exprs);
+         }
+
   explicit ObjCBoxedExpr(EmptyShell Empty)
-  : Expr(ObjCBoxedExprClass, Empty) {}
+  : Expr(ObjCBoxedExprClass, Empty), NumSubExprs(0) {}
   
-  Expr *getSubExpr() { return cast<Expr>(SubExpr); }
-  const Expr *getSubExpr() const { return cast<Expr>(SubExpr); }
-  
+  Expr *getSubExpr() { return cast<Expr>(SubExprs[0]); }
+  const Expr *getSubExpr() const { return cast<Expr>(SubExprs[0]); }
+
+  void setSubExprs(ArrayRef<Expr *> Exprs) {
+    NumSubExprs = Exprs.size();
+    if (!NumSubExprs)
+      return;
+
+    SubExprs = new Stmt*[NumSubExprs];
+    for (unsigned i = 0; i != Exprs.size(); ++i) {
+      Expr *E = Exprs[i];
+      if (E->isTypeDependent())
+        setTypeDependent(true);
+      if (E->isValueDependent())
+        setValueDependent(true);
+      if (E->isInstantiationDependent())
+        setInstantiationDependent(true);
+      if (E->containsUnexpandedParameterPack())
+        setContainsUnexpandedParameterPack(true);
+
+      SubExprs[i] = E;
+    }
+  }
+
   ObjCMethodDecl *getBoxingMethod() const {
     return BoxingMethod; 
   }
@@ -123,15 +147,15 @@ public:
   }
   
   // Iterators
-  child_range children() { return child_range(&SubExpr, &SubExpr+1); }
+  child_range children() { return child_range(SubExprs, SubExprs + NumSubExprs); }
 
   typedef ConstExprIterator const_arg_iterator;
 
   const_arg_iterator arg_begin() const {
-    return reinterpret_cast<Stmt const * const*>(&SubExpr);
+    return SubExprs;
   }
   const_arg_iterator arg_end() const {
-    return reinterpret_cast<Stmt const * const*>(&SubExpr + 1);
+    return SubExprs + NumSubExprs;
   }
   
   friend class ASTStmtReader;
