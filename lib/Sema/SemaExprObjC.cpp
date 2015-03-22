@@ -456,6 +456,10 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   if (RValue.isInvalid()) {
     return ExprError();
   }
+
+  MutableArrayRef<Expr *> Args;
+  unsigned NumArgs;
+
   ValueExpr = RValue.get();
   QualType ValueType(ValueExpr->getType());
   if (ValueType->isBuiltinType() || ValueType->isEnumeralType()) {
@@ -502,6 +506,10 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
     BoxedType = NSNumberPointer;
 
+    NumArgs = 1;
+    SmallVector<Expr *, 1> ArgsV;
+    ArgsV.push_back(ValueExpr);
+    Args = ArgsV;
   } else if (const PointerType *PT = ValueType->getAs<PointerType>()) {
     // Support of NSString construction
 
@@ -572,6 +580,11 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       
       BoxingMethod = StringWithUTF8StringMethod;
       BoxedType = NSStringPointer;
+
+      NumArgs = 1;
+      SmallVector<Expr *, 1> ArgsV;
+      ArgsV.push_back(ValueExpr);
+      Args = ArgsV;
     }
   } else if (ValueType->isObjCBoxableStructureType()) {
     // Support for structure types, that marked as objc_boxable
@@ -681,7 +694,31 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
                                                      UO,
                                                      &Path,
                                                      VK_RValue);
-    ValueExpr = ICE;
+
+    NumArgs = 2;
+    SmallVector<Expr *, 2> ArgsV;
+    ArgsV.push_back(ICE);
+
+    QualType StrTy;
+    std::string Str;
+    QualType NotEncodedT;
+    Context.getObjCEncodingForType(ValueExpr->getType(), Str, nullptr, &NotEncodedT);
+    // The type of @encode is the same as the type of the corresponding string,
+    // which is an array type.
+    StrTy = Context.CharTy;
+    // A C++ string literal has a const-qualified element type (C++ 2.13.4p1).
+    if (getLangOpts().CPlusPlus || getLangOpts().ConstStrings)
+      StrTy.addConst();
+    StrTy = Context.getConstantArrayType(StrTy, llvm::APInt(32, Str.size()+1),
+                                         ArrayType::Normal, 0);
+
+    TypeSourceInfo *TSI = Context.CreateTypeSourceInfo(ValueExpr->getType());
+    ObjCEncodeExpr *OEE = ::new ObjCEncodeExpr(StrTy,
+                                               TSI,
+                                               SourceLocation(),
+                                               SourceLocation());
+    ArgsV.push_back(OEE);
+    Args = ArgsV;
   }
 
   if (!BoxingMethod) {
@@ -692,19 +729,22 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   
   DiagnoseUseOfDecl(BoxingMethod, SR.getBegin());
 
-  // Convert the expression to the type that the parameter requires.
-  ParmVarDecl *ParamDecl = BoxingMethod->parameters()[0];
-  InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
-                                                                    ParamDecl);
-  ExprResult ConvertedValueExpr = PerformCopyInitialization(Entity,
-                                                            SourceLocation(),
-                                                            ValueExpr);
-  if (ConvertedValueExpr.isInvalid())
-    return ExprError();
-  ValueExpr = ConvertedValueExpr.get();
+  for (unsigned i = 0; i < NumArgs; i++) {
+    Expr *E = Args[i];
+    // Convert the expression to the type that the parameter requires.
+    ParmVarDecl *ParamDecl = BoxingMethod->parameters()[i];
+    InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
+                                                                      ParamDecl);
+    ExprResult ConvertedValueExpr = PerformCopyInitialization(Entity,
+                                                              SourceLocation(),
+                                                              E);
+    if (ConvertedValueExpr.isInvalid())
+      return ExprError();
+    Args[i] = ConvertedValueExpr.get();
+  }
 
   ObjCBoxedExpr *BoxedExpr = 
-    new (Context) ObjCBoxedExpr(ValueExpr, BoxedType,
+    new (Context) ObjCBoxedExpr(Args, BoxedType,
                                       BoxingMethod, SR);
   return MaybeBindToTemporary(BoxedExpr);
 }
