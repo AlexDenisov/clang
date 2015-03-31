@@ -683,13 +683,16 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     BoxingMethod = ValueWithBytesObjCTypeMethod;
     BoxedType = NSValuePointer;
 
-    UnaryOperator *UO = ::new UnaryOperator(ValueExpr, UO_AddrOf,
-                                            Context.getPointerType(ValueExpr->getType()),
-                                            VK_RValue, OK_Ordinary,
-                                            ValueExpr->getSourceRange().getBegin());
+    QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
+    SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
+    UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
+                                                      ExprPtrType,
+                                                      VK_RValue, OK_Ordinary,
+                                                      ESL);
     CXXCastPath Path;
+    QualType ConstVoidType = Context.getPointerType(Context.VoidTy.withConst());
     ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
-                                                     Context.getPointerType(Context.VoidTy.withConst()),
+                                                     ConstVoidType,
                                                      CK_BitCast,
                                                      UO,
                                                      &Path,
@@ -699,25 +702,14 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     SmallVector<Expr *, 2> ArgsV;
     ArgsV.push_back(ICE);
 
-    QualType StrTy;
-    std::string Str;
-    QualType NotEncodedT;
-    Context.getObjCEncodingForType(ValueExpr->getType(), Str, nullptr, &NotEncodedT);
-    // The type of @encode is the same as the type of the corresponding string,
-    // which is an array type.
-    StrTy = Context.CharTy;
-    // A C++ string literal has a const-qualified element type (C++ 2.13.4p1).
-    if (getLangOpts().CPlusPlus || getLangOpts().ConstStrings)
-      StrTy.addConst();
-    StrTy = Context.getConstantArrayType(StrTy, llvm::APInt(32, Str.size()+1),
-                                         ArrayType::Normal, 0);
-
     TypeSourceInfo *TSI = Context.CreateTypeSourceInfo(ValueExpr->getType());
-    ObjCEncodeExpr *OEE = ::new ObjCEncodeExpr(StrTy,
+    ExprResult OEE = BuildObjCEncodeExpression(SourceLocation(),
                                                TSI,
-                                               SourceLocation(),
                                                SourceLocation());
-    ArgsV.push_back(OEE);
+    if (OEE.isInvalid()) {
+      return ExprError();
+    }
+    ArgsV.push_back(OEE.get());
     Args = ArgsV;
   }
 
@@ -733,9 +725,9 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     Expr *E = Args[i];
     // Convert the expression to the type that the parameter requires.
     ParmVarDecl *ParamDecl = BoxingMethod->parameters()[i];
-    InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
-                                                                      ParamDecl);
-    ExprResult ConvertedValueExpr = PerformCopyInitialization(Entity,
+    InitializedEntity IE = InitializedEntity::InitializeParameter(Context,
+                                                                  ParamDecl);
+    ExprResult ConvertedValueExpr = PerformCopyInitialization(IE,
                                                               SourceLocation(),
                                                               E);
     if (ConvertedValueExpr.isInvalid())
