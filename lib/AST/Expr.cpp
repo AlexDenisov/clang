@@ -4174,6 +4174,34 @@ Stmt::child_range UnaryExprOrTypeTraitExpr::children() {
   return child_range(&Argument.Ex, &Argument.Ex + 1);
 }
 
+// ObjCBoxedExpr
+void ObjCBoxedExpr::setSubExprs(const clang::ASTContext &C,
+                                ArrayRef<clang::Expr *> Exprs) {
+  unsigned NumSubExprs = Exprs.size();
+
+  Stmt **NewSubExprs = new (C) Stmt*[NumSubExprs];
+  for (unsigned i = 0; i != NumSubExprs; i++) {
+    Expr *E = Exprs[i];
+    if (E->isTypeDependent())
+      setTypeDependent(true);
+    if (E->isValueDependent())
+      setValueDependent(true);
+    if (E->isInstantiationDependent())
+      setInstantiationDependent(true);
+    if (E->containsUnexpandedParameterPack())
+      setContainsUnexpandedParameterPack(true);
+
+    NewSubExprs[i] = E;
+  }
+
+  if (SubExprs) {
+    C.Deallocate(SubExprs);
+  }
+
+  SubExprs = NewSubExprs;
+  this->NumSubExprs = NumSubExprs;
+}
+
 // ObjCMessageExpr
 Stmt::child_range ObjCMessageExpr::children() {
   Stmt **begin;

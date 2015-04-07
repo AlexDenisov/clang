@@ -305,7 +305,7 @@ ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
   
   // Use the effective source range of the literal, including the leading '@'.
   return MaybeBindToTemporary(
-           new (Context) ObjCBoxedExpr(Number, NSNumberPointer, Method,
+           new (Context) ObjCBoxedExpr(Context, Number, NSNumberPointer, Method,
                                        SourceRange(AtLoc, NR.getEnd())));
 }
 
@@ -446,7 +446,8 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
 ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   if (ValueExpr->isTypeDependent()) {
     ObjCBoxedExpr *BoxedExpr = 
-      new (Context) ObjCBoxedExpr(ValueExpr, Context.DependentTy, nullptr, SR);
+      new (Context) ObjCBoxedExpr(Context, ValueExpr, Context.DependentTy,
+                                  nullptr, SR);
     return BoxedExpr;
   }
   ObjCMethodDecl *BoxingMethod = nullptr;
@@ -686,9 +687,9 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
     SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
     UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
-                                                      ExprPtrType,
-                                                      VK_RValue, OK_Ordinary,
-                                                      ESL);
+                                                    ExprPtrType,
+                                                    VK_RValue, OK_Ordinary,
+                                                    ESL);
     CXXCastPath Path;
     QualType ConstVoidType = Context.getPointerType(Context.VoidTy.withConst());
     ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
@@ -736,8 +737,8 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   }
 
   ObjCBoxedExpr *BoxedExpr = 
-    new (Context) ObjCBoxedExpr(Args, BoxedType,
-                                      BoxingMethod, SR);
+    new (Context) ObjCBoxedExpr(Context, Args, BoxedType,
+                                BoxingMethod, SR);
   return MaybeBindToTemporary(BoxedExpr);
 }
 

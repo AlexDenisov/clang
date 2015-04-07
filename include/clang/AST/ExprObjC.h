@@ -13,7 +13,6 @@
 
 #ifndef LLVM_CLANG_AST_EXPROBJC_H
 #define LLVM_CLANG_AST_EXPROBJC_H
-
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/SelectorLocationsKind.h"
@@ -95,40 +94,25 @@ class ObjCBoxedExpr : public Expr {
   SourceRange Range;
   unsigned NumSubExprs;
 public:
-  ObjCBoxedExpr(ArrayRef<Expr *> Exprs, QualType T, ObjCMethodDecl *method,
-                     SourceRange R)
+  ObjCBoxedExpr(const ASTContext &C, ArrayRef<Expr *> Exprs, QualType T,
+                ObjCMethodDecl *method, SourceRange R)
   : Expr(ObjCBoxedExprClass, T, VK_RValue, OK_Ordinary, 
          false, false, false, false),
-         BoxingMethod(method), Range(R), NumSubExprs(0) {
-           setSubExprs(Exprs);
+         SubExprs(nullptr), BoxingMethod(method), Range(R),
+         NumSubExprs(0) {
+           setSubExprs(C, Exprs);
          }
 
   explicit ObjCBoxedExpr(EmptyShell Empty)
-  : Expr(ObjCBoxedExprClass, Empty), NumSubExprs(0) {}
+  : Expr(ObjCBoxedExprClass, Empty), SubExprs(nullptr), NumSubExprs(0) {}
   
   Expr *getSubExpr() { return cast<Expr>(SubExprs[0]); }
   const Expr *getSubExpr() const { return cast<Expr>(SubExprs[0]); }
 
-  void setSubExprs(ArrayRef<Expr *> Exprs) {
-    NumSubExprs = Exprs.size();
-    if (!NumSubExprs)
-      return;
+  void setNumSubExprs(const ASTContext &C, unsigned NumSubExprs);
+  unsigned getNumSubExprs() const { return NumSubExprs; }
 
-    SubExprs = new Stmt*[NumSubExprs];
-    for (unsigned i = 0; i != Exprs.size(); ++i) {
-      Expr *E = Exprs[i];
-      if (E->isTypeDependent())
-        setTypeDependent(true);
-      if (E->isValueDependent())
-        setValueDependent(true);
-      if (E->isInstantiationDependent())
-        setInstantiationDependent(true);
-      if (E->containsUnexpandedParameterPack())
-        setContainsUnexpandedParameterPack(true);
-
-      SubExprs[i] = E;
-    }
-  }
+  void setSubExprs(const ASTContext &C, ArrayRef<Expr *> Exprs);
 
   ObjCMethodDecl *getBoxingMethod() const {
     return BoxingMethod; 
