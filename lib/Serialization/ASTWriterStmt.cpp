@@ -880,6 +880,7 @@ void ASTStmtWriter::VisitObjCStringLiteral(ObjCStringLiteral *E) {
 
 void ASTStmtWriter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   VisitExpr(E);
+
   for (auto SE : E->children())
     Writer.AddStmt(SE);
   Writer.AddDeclRef(E->getBoxingMethod(), Record);

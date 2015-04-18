@@ -89,33 +89,52 @@ public:
 /// Also used for boxing non-parenthesized numeric literals;
 /// as in: @42 or \@true (c++/objc++) or \@__yes (c/objc).
 class ObjCBoxedExpr : public Expr {
-  Stmt **SubExprs;
+  SmallVector<Stmt *, 2> SubExprs;
   ObjCMethodDecl *BoxingMethod;
   SourceRange Range;
   unsigned NumSubExprs;
 public:
-  ObjCBoxedExpr(const ASTContext &C, ArrayRef<Expr *> Exprs, QualType T,
+  ObjCBoxedExpr(ArrayRef<Expr *> Exprs, QualType T,
                 ObjCMethodDecl *method, SourceRange R)
   : Expr(ObjCBoxedExprClass, T, VK_RValue, OK_Ordinary, 
          false, false, false, false),
-         SubExprs(nullptr), BoxingMethod(method), Range(R),
+         SubExprs(2), BoxingMethod(method), Range(R),
          NumSubExprs(0) {
-           setSubExprs(C, Exprs);
+           setSubExprs(Exprs);
          }
 
   explicit ObjCBoxedExpr(EmptyShell Empty)
-  : Expr(ObjCBoxedExprClass, Empty), SubExprs(nullptr), NumSubExprs(0) {}
+  : Expr(ObjCBoxedExprClass, Empty), SubExprs(2), NumSubExprs(0) {}
   
   Expr *getSubExpr() { return cast<Expr>(SubExprs[0]); }
   const Expr *getSubExpr() const { return cast<Expr>(SubExprs[0]); }
 
-  void setNumSubExprs(const ASTContext &C, unsigned NumSubExprs);
   unsigned getNumSubExprs() const { return NumSubExprs; }
 
-  void setSubExprs(const ASTContext &C, ArrayRef<Expr *> Exprs);
+  void setSubExprs(ArrayRef<Expr *> Exprs);
+//  {
+//    unsigned NumSubExprs = Exprs.size();
+//    assert(NumSubExprs < 3);
+//
+//    for (unsigned i = 0; i < NumSubExprs; i++) {
+//      Expr *E = Exprs[i];
+//      if (E->isTypeDependent())
+//        setTypeDependent(true);
+//      if (E->isValueDependent())
+//        setValueDependent(true);
+//      if (E->isInstantiationDependent())
+//        setInstantiationDependent(true);
+//      if (E->containsUnexpandedParameterPack())
+//        setContainsUnexpandedParameterPack(true);
+//
+//      SubExprs[i] = E;
+//    }
+//
+//    this->NumSubExprs = NumSubExprs;
+//  }
 
   ObjCMethodDecl *getBoxingMethod() const {
-    return BoxingMethod; 
+    return BoxingMethod;
   }
   
   SourceLocation getAtLoc() const { return Range.getBegin(); }
@@ -131,15 +150,16 @@ public:
   }
   
   // Iterators
-  child_range children() { return child_range(SubExprs, SubExprs + NumSubExprs); }
+  child_range children() { return child_range(SubExprs.data(),
+                                              SubExprs.data() + NumSubExprs); }
 
   typedef ConstExprIterator const_arg_iterator;
 
   const_arg_iterator arg_begin() const {
-    return SubExprs;
+    return SubExprs.data();
   }
   const_arg_iterator arg_end() const {
-    return SubExprs + NumSubExprs;
+    return SubExprs.data() + NumSubExprs;
   }
   
   friend class ASTStmtReader;
