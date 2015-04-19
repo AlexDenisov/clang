@@ -82,3 +82,20 @@ void doNSEdgeInsets() {
   // CHECK:      ret void
 }
 
+// CHECK-LABEL: define void @doRangeRValue() 
+void doRangeRValue() {
+  // CHECK:     [[COERCE:%.*]]          = alloca %struct._NSRange{{.*}}
+  // CHECK:     [[RECV_PTR:%.*]]        = load {{.*}} [[NSVALUE]]
+  // CHECK:     [[RVAL:%.*]]            = call {{.*}} @getRange()
+  // CHECK:     [[COERCE_CAST:%.*]]     = bitcast %struct._NSRange* [[COERCE]]{{.*}}
+  // CHECK:     [[COERCE_CAST_PTR:%.*]] = getelementptr {{.*}} [[COERCE_CAST]], {{.*}}
+  // CHECK:     [[EXTR_RVAL:%.*]]       = extractvalue {{.*}} [[RVAL]]{{.*}}
+  // CHECK:     store {{.*}}[[EXTR_RVAL]]{{.*}}[[COERCE_CAST_PTR]]{{.*}}
+  // CHECK:     [[COERCE_CAST:%.*]]     = bitcast %struct._NSRange* [[COERCE]]{{.*}}
+  // CHECK:     [[SEL:%.*]]             = load i8*, i8** [[VALUE_SEL]]
+  // CHECK:     [[RECV:%.*]]            = bitcast %struct._class_t* [[RECV_PTR]] to i8*
+  // CHECK:     call {{.*objc_msgSend.*}}(i8* [[RECV]], i8* [[SEL]], i8* [[COERCE_CAST]], i8* {{.*}}[[RANGE_STR]]{{.*}})
+  NSValue *range_rvalue = @(getRange());
+  // CHECK: ret void
+}
+
