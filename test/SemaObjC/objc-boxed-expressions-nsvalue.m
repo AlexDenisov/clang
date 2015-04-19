@@ -46,9 +46,7 @@ void checkNSValueDiagnostic() {
 }
 
 @interface NSValue
-
 + (NSValue *)valueWithBytes:(const void *)value objCType:(const char *)type;
-
 @end
 
 int main() {
@@ -78,4 +76,19 @@ int main() {
 
   SomeStruct s;
   id err = @(s); // expected-error{{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}
+}
+
+CGRect getRect() {
+  CGRect r;
+  return r;
+}
+
+SomeStruct getSomeStruct() {
+  SomeStruct s;
+  return s;
+}
+
+void rvalue() {
+  id rv_rect = @(getRect());
+  id rv_some_struct = @(getSomeStruct()); // expected-error {{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}
 }
