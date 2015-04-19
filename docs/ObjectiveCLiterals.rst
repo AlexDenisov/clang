@@ -137,8 +137,10 @@ and some C structures (via NSValue) are supported:
     NSArray *pathComponents = [path componentsSeparatedByString:@":"];
 
     // NS structs
-    NSValue *center = @(view.center);         // [NSValue valueWithPoint:view.center]
-    NSValue *frame = @(view.frame);           // [NSValue valueWithRect:view.frame]
+    NSValue *center = @(view.center);         // Point p = view.point;
+                                              // [NSValue valueWithBytes:&p objCType:@encode(Point)];
+    NSValue *frame = @(view.frame);           // Rect r = view.frame;
+                                              // [NSValue valueWithBytes:&r objCType:@encode(Rect)];
 
 Boxed Enums
 -----------
@@ -226,19 +228,37 @@ Boxed C Structures
 ------------------
 
 Boxed expressions support construction of NSValue objects.
-It said that some C structures can be used:
+It said that C structures can be used, the only requirement is:
+structure should be marked with ``objc_boxable`` attribute.
+To support older version of frameworks and/or third-party libraries
+you may need to add the attribute via ``typedef``.
 
 .. code-block:: objc
 
-    NSPoint p;
-    NSValue *point = @(p);          // valueWithPoint:
-    NSSize s;
-    NSValue *size = @(s);           // valueWithSize:
+    struct Point {
+        // ...
+    } __attribute__((objc_boxable));
 
-The following list of structs supported, depends on target system:
+    typedef struct _Size {
+        // ...
+    } Size __attribute__((objc_boxable));
 
-  - OSX: ``NSPoint``, ``NSSize``, ``NSRect``, ``NSRange``, ``NSEdgeInsets``
-  - iOS: ``CGPoint``, ``CGSize``, ``CGRect``, ``NSRange``, ``NSEdgeInsets``
+    typedef struct _Rect {
+        // ...
+    } Rect;
+
+    struct Point p;
+    NSValue *point = @(p);          // ok
+    Size s;
+    NSValue *size = @(s);           // ok
+
+    Rect r;
+    NSValue *bad_rect = @(r);       // error
+
+    __attribute__((objc_boxable)) typedef struct _Rect Rect;
+
+    NSValue *good_rect = @(r);      // ok
+
 
 Container Literals
 ==================

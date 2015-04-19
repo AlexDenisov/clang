@@ -446,8 +446,7 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
 ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   if (ValueExpr->isTypeDependent()) {
     ObjCBoxedExpr *BoxedExpr = 
-      new (Context) ObjCBoxedExpr(ValueExpr, Context.DependentTy,
-                                  nullptr, SR);
+      new (Context) ObjCBoxedExpr(ValueExpr, Context.DependentTy, nullptr, SR);
     return BoxedExpr;
   }
   ObjCMethodDecl *BoxingMethod = nullptr;

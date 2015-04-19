@@ -13,6 +13,7 @@
 
 #ifndef LLVM_CLANG_AST_EXPROBJC_H
 #define LLVM_CLANG_AST_EXPROBJC_H
+
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/SelectorLocationsKind.h"
@@ -85,10 +86,13 @@ public:
 };
 
 /// ObjCBoxedExpr - used for generalized expression boxing.
-/// as in: @(strdup("hello world")) or @(random())
+/// as in: @(strdup("hello world")), @(random()) or @(view.frame)
 /// Also used for boxing non-parenthesized numeric literals;
 /// as in: @42 or \@true (c++/objc++) or \@__yes (c/objc).
 class ObjCBoxedExpr : public Expr {
+  // Most expressions need only one sub-expression (e.g. @("hello world")),
+  // but NSValue expressions need two parameters:
+  // actual expression (e.g. view.frame) and @encode (e.g. @encode(CGRect))
   SmallVector<Stmt *, 2> SubExprs;
   ObjCMethodDecl *BoxingMethod;
   SourceRange Range;
@@ -113,7 +117,7 @@ public:
 
   void setSubExprs(ArrayRef<Expr *> Exprs) {
     unsigned NumSubExprs = Exprs.size();
-    assert(NumSubExprs < 3);
+    assert(NumSubExprs < 3 && "Too many sub-expressions");
 
     for (unsigned i = 0; i < NumSubExprs; i++) {
       Expr *E = Exprs[i];
