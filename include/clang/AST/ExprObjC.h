@@ -111,27 +111,26 @@ public:
 
   unsigned getNumSubExprs() const { return NumSubExprs; }
 
-  void setSubExprs(ArrayRef<Expr *> Exprs);
-//  {
-//    unsigned NumSubExprs = Exprs.size();
-//    assert(NumSubExprs < 3);
-//
-//    for (unsigned i = 0; i < NumSubExprs; i++) {
-//      Expr *E = Exprs[i];
-//      if (E->isTypeDependent())
-//        setTypeDependent(true);
-//      if (E->isValueDependent())
-//        setValueDependent(true);
-//      if (E->isInstantiationDependent())
-//        setInstantiationDependent(true);
-//      if (E->containsUnexpandedParameterPack())
-//        setContainsUnexpandedParameterPack(true);
-//
-//      SubExprs[i] = E;
-//    }
-//
-//    this->NumSubExprs = NumSubExprs;
-//  }
+  void setSubExprs(ArrayRef<Expr *> Exprs) {
+    unsigned NumSubExprs = Exprs.size();
+    assert(NumSubExprs < 3);
+
+    for (unsigned i = 0; i < NumSubExprs; i++) {
+      Expr *E = Exprs[i];
+      if (E->isTypeDependent())
+        setTypeDependent(true);
+      if (E->isValueDependent())
+        setValueDependent(true);
+      if (E->isInstantiationDependent())
+        setInstantiationDependent(true);
+      if (E->containsUnexpandedParameterPack())
+        setContainsUnexpandedParameterPack(true);
+
+      SubExprs[i] = E;
+    }
+    
+    this->NumSubExprs = NumSubExprs;
+  }
 
   ObjCMethodDecl *getBoxingMethod() const {
     return BoxingMethod;
