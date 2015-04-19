@@ -106,8 +106,8 @@ public:
   explicit ObjCBoxedExpr(EmptyShell Empty)
   : Expr(ObjCBoxedExprClass, Empty), SubExprs(2), NumSubExprs(0) {}
   
-  Expr *getSubExpr() { return cast<Expr>(SubExprs[0]); }
-  const Expr *getSubExpr() const { return cast<Expr>(SubExprs[0]); }
+  Expr *getSubExpr(int n) { return cast<Expr>(SubExprs[n]); }
+  const Expr *getSubExpr(int n) const { return cast<Expr>(SubExprs[n]); }
 
   unsigned getNumSubExprs() const { return NumSubExprs; }
 
