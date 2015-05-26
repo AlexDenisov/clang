@@ -933,7 +933,15 @@ void ASTStmtReader::VisitObjCStringLiteral(ObjCStringLiteral *E) {
 void ASTStmtReader::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   VisitExpr(E);
   // could be one of several IntegerLiteral, FloatLiteral, etc.
-  E->setSubExprs(Reader.ReadSubExpr());
+  Expr *SE = Reader.ReadSubExpr();
+//  if (UnaryOperator *UO = dyn_cast<UnaryOperator>(SE->IgnoreCasts())) {
+//    if (UO->getSubExpr()->IgnoreCasts()->getType()->isObjCBoxableStructureType()) {
+//      E->setSubExprs(SE);
+//    }
+//  } else {
+    E->setSubExprs(SE);
+//  }
+
   E->BoxingMethod = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
   E->Range = ReadSourceRange(Record, Idx);
 }
