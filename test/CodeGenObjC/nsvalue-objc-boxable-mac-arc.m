@@ -15,6 +15,8 @@
 // CHECK-LABEL: define void @doRange()
 void doRange() {
   // CHECK:      [[RANGE:%.*]]      = bitcast %struct._NSRange* {{.*}}
+  // CHECK:      call void @llvm.lifetime.start{{.*}}
+  // CHECK:      [[RANGE:%.*]]      = bitcast %struct._NSRange* {{.*}}
   // CHECK:      call void @llvm.memcpy{{.*}}[[RANGE]]{{.*}}
   // CHECK:      [[RECV_PTR:%.*]]   = load {{.*}} [[NSVALUE]]
   // CHECK:      [[RANGE_CAST:%.*]] = bitcast %struct._NSRange* {{.*}}
@@ -25,11 +27,13 @@ void doRange() {
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *range = @(ns_range);
   // CHECK:      call void @objc_release
-  // CHECK-NEXT: ret void
+  // CHECK:      ret void
 }
 
 // CHECK-LABEL: define void @doPoint()
 void doPoint() {
+  // CHECK:      [[POINT:%.*]]      = bitcast %struct._NSPoint* {{.*}}
+  // CHECK:      call void @llvm.lifetime.start{{.*}}
   // CHECK:      [[POINT:%.*]]      = bitcast %struct._NSPoint* {{.*}}
   // CHECK:      call void @llvm.memcpy{{.*}}[[POINT]]{{.*}}
   // CHECK:      [[RECV_PTR:%.*]]   = load {{.*}} [[NSVALUE]]
@@ -41,11 +45,13 @@ void doPoint() {
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *point = @(ns_point);
   // CHECK:      call void @objc_release
-  // CHECK-NEXT: ret void
+  // CHECK:      ret void
 }
 
 // CHECK-LABEL: define void @doSize()
 void doSize() {
+  // CHECK:      [[SIZE:%.*]]      = bitcast %struct._NSSize* {{.*}}
+  // CHECK:      call void @llvm.lifetime.start{{.*}}
   // CHECK:      [[SIZE:%.*]]      = bitcast %struct._NSSize* {{.*}}
   // CHECK:      call void @llvm.memcpy{{.*}}[[SIZE]]{{.*}}
   // CHECK:      [[RECV_PTR:%.*]]  = load {{.*}} [[NSVALUE]]
@@ -57,7 +63,7 @@ void doSize() {
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *size = @(ns_size);
   // CHECK:      call void @objc_release
-  // CHECK-NEXT: ret void
+  // CHECK:      ret void
 }
 
 // CHECK-LABEL: define void @doRect()
@@ -74,7 +80,7 @@ void doRect() {
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *rect = @(ns_rect);
   // CHECK:      call void @objc_release
-  // CHECK-NEXT: ret void
+  // CHECK:      ret void
 }
 
 // CHECK-LABEL: define void @doNSEdgeInsets()
@@ -89,7 +95,7 @@ void doNSEdgeInsets() {
   // CHECK:      call i8* @objc_retainAutoreleasedReturnValue
   NSValue *edge_insets = @(ns_edge_insets);
   // CHECK:      call void @objc_release
-  // CHECK-NEXT: ret void
+  // CHECK:      ret void
 }
 
 // CHECK-LABEL: define void @doRangeRValue() 
@@ -108,6 +114,6 @@ void doRangeRValue() {
   // CHECK:     call i8* @objc_retainAutoreleasedReturnValue
   NSValue *range_rvalue = @(getRange());
   // CHECK:     call void @objc_release
-  // CHECK: ret void
+  // CHECK:     ret void
 }
 

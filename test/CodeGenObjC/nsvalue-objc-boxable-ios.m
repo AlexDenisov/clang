@@ -15,6 +15,8 @@
 // CHECK-LABEL: define void @doRange()
 void doRange() {
   // CHECK:      [[RANGE:%.*]]      = bitcast %struct._NSRange* {{.*}}
+  // CHECK:      call void @llvm.lifetime.start{{.*}}
+  // CHECK:      [[RANGE:%.*]]      = bitcast %struct._NSRange* {{.*}}
   // CHECK:      call void @llvm.memcpy{{.*}}[[RANGE]]{{.*}}
   // CHECK:      [[RECV_PTR:%.*]]   = load {{.*}} [[NSVALUE]]
   // CHECK:      [[RANGE_CAST:%.*]] = bitcast %struct._NSRange* {{.*}}
@@ -29,6 +31,8 @@ void doRange() {
 // CHECK-LABEL: define void @doPoint()
 void doPoint() {
   // CHECK:      [[POINT:%.*]]      = bitcast %struct.CGPoint* {{.*}}
+  // CHECK:      call void @llvm.lifetime.start{{.*}}
+  // CHECK:      [[POINT:%.*]]      = bitcast %struct.CGPoint* {{.*}}
   // CHECK:      call void @llvm.memcpy{{.*}}[[POINT]]{{.*}}
   // CHECK:      [[RECV_PTR:%.*]]   = load {{.*}} [[NSVALUE]]
   // CHECK:      [[POINT_CAST:%.*]] = bitcast %struct.CGPoint* {{.*}}
@@ -42,6 +46,8 @@ void doPoint() {
 
 // CHECK-LABEL: define void @doSize()
 void doSize() {
+  // CHECK:      [[SIZE:%.*]]      = bitcast %struct.CGSize* {{.*}}
+  // CHECK:      call void @llvm.lifetime.start{{.*}}
   // CHECK:      [[SIZE:%.*]]      = bitcast %struct.CGSize* {{.*}}
   // CHECK:      call void @llvm.memcpy{{.*}}[[SIZE]]{{.*}}
   // CHECK:      [[RECV_PTR:%.*]]  = load {{.*}} [[NSVALUE]]
