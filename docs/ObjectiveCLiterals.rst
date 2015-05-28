@@ -581,6 +581,10 @@ checks. Here are examples of their use:
         }
     #endif
 
+    #if __has_attribute(objc_boxable)
+        __attribute__((objc_boxable)) typedef struct _Rect Rect;
+    #endif
+
     #if __has_feature(objc_boxed_nsvalue_expressions)
         CABasicAnimation animation = [CABasicAnimation animationWithKeyPath:@"position"];
         animation.fromValue = @(layer.position);

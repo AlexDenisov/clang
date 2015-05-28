@@ -702,14 +702,17 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     SmallVector<Expr *, 2> ArgsV;
     ArgsV.push_back(ICE);
 
-    TypeSourceInfo *TSI = Context.CreateTypeSourceInfo(ValueExpr->getType());
-    ExprResult OEE = BuildObjCEncodeExpression(SourceLocation(),
-                                               TSI,
-                                               SourceLocation());
-    if (OEE.isInvalid()) {
-      return ExprError();
-    }
-    ArgsV.push_back(OEE.get());
+    std::string Str;
+    Context.getObjCEncodingForType(ValueExpr->getType(), Str);
+
+    llvm::APInt ArrSize = llvm::APInt(32, Str.size() + 1);
+    QualType StrType = Context.getConstantArrayType(Context.CharTy,
+                                                    ArrSize, ArrayType::Normal,
+                                                     0);
+    StringLiteral *SL = StringLiteral::Create(Context, Str, StringLiteral::Ascii,
+                                 /*Pascal=*/false, StrType, SourceLocation());
+
+    ArgsV.push_back(SL);
     Args = ArgsV;
   }
 

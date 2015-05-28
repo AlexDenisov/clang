@@ -932,16 +932,13 @@ void ASTStmtReader::VisitObjCStringLiteral(ObjCStringLiteral *E) {
 
 void ASTStmtReader::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   VisitExpr(E);
-  // could be one of several IntegerLiteral, FloatLiteral, etc.
-  Expr *SE = Reader.ReadSubExpr();
-//  if (UnaryOperator *UO = dyn_cast<UnaryOperator>(SE->IgnoreCasts())) {
-//    if (UO->getSubExpr()->IgnoreCasts()->getType()->isObjCBoxableStructureType()) {
-//      E->setSubExprs(SE);
-//    }
-//  } else {
-    E->setSubExprs(SE);
-//  }
-
+  unsigned NumSubExprs = Record[Idx++];
+  assert(NumSubExprs <= 2 && "can hold up to two sub-expressions");
+  SmallVector<Expr *, 2> SubExprs;
+  for (unsigned I = 0; I < NumSubExprs; I++) {
+    SubExprs.push_back(Reader.ReadSubExpr());
+  }
+  E->setSubExprs(SubExprs);
   E->BoxingMethod = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
   E->Range = ReadSourceRange(Record, Idx);
 }
