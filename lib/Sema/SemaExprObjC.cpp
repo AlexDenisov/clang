@@ -456,65 +456,12 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   if (RValue.isInvalid()) {
     return ExprError();
   }
-
-  MutableArrayRef<Expr *> Args;
-  unsigned NumArgs;
-
   ValueExpr = RValue.get();
   QualType ValueType(ValueExpr->getType());
-  if (ValueType->isBuiltinType() || ValueType->isEnumeralType()) {
-    // We support numeric, char, BOOL/bool and Enum types.
-    // Enum types treat as Integer.
-    // Check for a top-level character literal.
-    if (const CharacterLiteral *Char =
-        dyn_cast<CharacterLiteral>(ValueExpr->IgnoreParens())) {
-      // In C, character literals have type 'int'. That's not the type we want
-      // to use to determine the Objective-c literal kind.
-      switch (Char->getKind()) {
-      case CharacterLiteral::Ascii:
-        ValueType = Context.CharTy;
-        break;
+  if (const PointerType *PT = ValueType->getAs<PointerType>()) {
+    QualType PointeeType = PT->getPointeeType();
+    if (Context.hasSameUnqualifiedType(PointeeType, Context.CharTy)) {
 
-      case CharacterLiteral::Wide:
-        ValueType = Context.getWideCharType();
-        break;
-
-      case CharacterLiteral::UTF16:
-        ValueType = Context.Char16Ty;
-        break;
-
-      case CharacterLiteral::UTF32:
-        ValueType = Context.Char32Ty;
-        break;
-      }
-    }
-
-    if (const EnumType *ET = ValueType->getAs<EnumType>()) {
-      if (!ET->getDecl()->isComplete()) {
-        Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)
-        << ValueType << ValueExpr->getSourceRange();
-        return ExprError();
-      }
-
-      ValueType = ET->getDecl()->getIntegerType();
-    }
-
-    CheckForIntOverflow(ValueExpr);
-    // FIXME:  Do I need to do anything special with BoolTy expressions?
-
-    // Look for the appropriate method within NSNumber.
-    BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
-    BoxedType = NSNumberPointer;
-
-    NumArgs = 1;
-    SmallVector<Expr *, 1> ArgsV;
-    ArgsV.push_back(ValueExpr);
-    Args = ArgsV;
-  } else if (const PointerType *PT = ValueType->getAs<PointerType>()) {
-    // Support of NSString construction
-
-    // Check if we can construct NSString from chars
-    if (Context.hasSameUnqualifiedType(PT->getPointeeType(), Context.CharTy)) {
       if (!NSStringDecl) {
         IdentifierInfo *NSStringId =
           NSAPIObj->getNSClassId(NSAPI::ClassId_NSString);
@@ -580,21 +527,62 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       
       BoxingMethod = StringWithUTF8StringMethod;
       BoxedType = NSStringPointer;
-
-      NumArgs = 1;
-      SmallVector<Expr *, 1> ArgsV;
-      ArgsV.push_back(ValueExpr);
-      Args = ArgsV;
     }
+  } else if (ValueType->isBuiltinType()) {
+    // The other types we support are numeric, char and BOOL/bool. We could also
+    // provide limited support for structure types, such as NSRange, NSRect, and
+    // NSSize. See NSValue (NSValueGeometryExtensions) in <Foundation/NSGeometry.h>
+    // for more details.
+
+    // Check for a top-level character literal.
+    if (const CharacterLiteral *Char =
+        dyn_cast<CharacterLiteral>(ValueExpr->IgnoreParens())) {
+      // In C, character literals have type 'int'. That's not the type we want
+      // to use to determine the Objective-c literal kind.
+      switch (Char->getKind()) {
+      case CharacterLiteral::Ascii:
+        ValueType = Context.CharTy;
+        break;
+        
+      case CharacterLiteral::Wide:
+        ValueType = Context.getWideCharType();
+        break;
+        
+      case CharacterLiteral::UTF16:
+        ValueType = Context.Char16Ty;
+        break;
+        
+      case CharacterLiteral::UTF32:
+        ValueType = Context.Char32Ty;
+        break;
+      }
+    }
+    CheckForIntOverflow(ValueExpr);
+    // FIXME:  Do I need to do anything special with BoolTy expressions?
+    
+    // Look for the appropriate method within NSNumber.
+    BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
+    BoxedType = NSNumberPointer;
+
+  } else if (const EnumType *ET = ValueType->getAs<EnumType>()) {
+    if (!ET->getDecl()->isComplete()) {
+      Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)
+        << ValueType << ValueExpr->getSourceRange();
+      return ExprError();
+    }
+
+    BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(),
+                                            ET->getDecl()->getIntegerType());
+    BoxedType = NSNumberPointer;
   } else if (ValueType->isObjCBoxableStructureType()) {
     // Support for structure types, that marked as objc_boxable
     // struct s { ... } __attribute__((objc_boxable));
-
+    
     // Look up the NSValue class, if we haven't done so already. It's cached
     // in the Sema instance.
     if (!NSValueDecl) {
       IdentifierInfo *NSValueId =
-        NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
+      NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
       NamedDecl *IF = LookupSingleName(TUScope, NSValueId,
                                        SR.getBegin(), Sema::LookupOrdinaryName);
       NSValueDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
@@ -614,106 +602,74 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
         Diag(SR.getBegin(), diag::err_undeclared_nsvalue);
         return ExprError();
       }
-
+      
       // generate the pointer to NSValue type.
       QualType NSValueObject = Context.getObjCInterfaceType(NSValueDecl);
       NSValuePointer = Context.getObjCObjectPointerType(NSValueObject);
     }
-
+    
     if (!ValueWithBytesObjCTypeMethod) {
       IdentifierInfo *II[] = {
         &Context.Idents.get("valueWithBytes"),
         &Context.Idents.get("objCType")
       };
       Selector ValueWithBytesObjCType = Context.Selectors.getSelector(2, II);
-
+      
       // Look for the appropriate method within NSValue.
       BoxingMethod = NSValueDecl->lookupClassMethod(ValueWithBytesObjCType);
       if (!BoxingMethod && getLangOpts().DebuggerObjCLiteral) {
         // Debugger needs to work even if NSString hasn't been defined.
         TypeSourceInfo *ReturnTInfo = nullptr;
         ObjCMethodDecl *M = ObjCMethodDecl::Create(
-           Context,
-           SourceLocation(),
-           SourceLocation(),
-           ValueWithBytesObjCType,
-           NSValuePointer,
-           ReturnTInfo,
-           NSValueDecl,
-           /*isInstance=*/false,
-           /*isVariadic=*/false,
-           /*isPropertyAccessor=*/false,
-           /*isImplicitlyDeclared=*/true,
-           /*isDefined=*/false,
-           ObjCMethodDecl::Required,
-           /*HasRelatedResultType=*/false);
-
+                                                   Context,
+                                                   SourceLocation(),
+                                                   SourceLocation(),
+                                                   ValueWithBytesObjCType,
+                                                   NSValuePointer,
+                                                   ReturnTInfo,
+                                                   NSValueDecl,
+                                                   /*isInstance=*/false,
+                                                   /*isVariadic=*/false,
+                                                   /*isPropertyAccessor=*/false,
+                                                   /*isImplicitlyDeclared=*/true,
+                                                   /*isDefined=*/false,
+                                                   ObjCMethodDecl::Required,
+                                                   /*HasRelatedResultType=*/false);
+        
         SmallVector<ParmVarDecl *, 2> Params;
-
+        
         ParmVarDecl *bytes =
-          ParmVarDecl::Create(Context, M,
-                              SourceLocation(), SourceLocation(),
-                              &Context.Idents.get("bytes"),
-                              Context.VoidPtrTy.withConst(),
-                              /*TInfo=*/nullptr,
-                              SC_None, nullptr);
+        ParmVarDecl::Create(Context, M,
+                            SourceLocation(), SourceLocation(),
+                            &Context.Idents.get("bytes"),
+                            Context.VoidPtrTy.withConst(),
+                            /*TInfo=*/nullptr,
+                            SC_None, nullptr);
         Params.push_back(bytes);
-
+        
         QualType ConstCharType = Context.CharTy.withConst();
         ParmVarDecl *type =
-          ParmVarDecl::Create(Context, M,
-                              SourceLocation(), SourceLocation(),
-                              &Context.Idents.get("type"),
-                              Context.getPointerType(ConstCharType),
-                              /*TInfo=*/nullptr,
-                              SC_None, nullptr);
+        ParmVarDecl::Create(Context, M,
+                            SourceLocation(), SourceLocation(),
+                            &Context.Idents.get("type"),
+                            Context.getPointerType(ConstCharType),
+                            /*TInfo=*/nullptr,
+                            SC_None, nullptr);
         Params.push_back(type);
-
+        
         M->setMethodParams(Context, Params, None);
         BoxingMethod = M;
       }
-
+      
       if (!validateBoxingMethod(*this, SR.getBegin(), NSValueDecl,
                                 ValueWithBytesObjCType, BoxingMethod))
         return ExprError();
       
       ValueWithBytesObjCTypeMethod = BoxingMethod;
     }
-
+    
     BoxingMethod = ValueWithBytesObjCTypeMethod;
     BoxedType = NSValuePointer;
-
-    QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
-    SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
-    UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
-                                                    ExprPtrType,
-                                                    VK_RValue, OK_Ordinary,
-                                                    ESL);
-    CXXCastPath Path;
-    QualType ConstVoidType = Context.getPointerType(Context.VoidTy.withConst());
-    ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
-                                                     ConstVoidType,
-                                                     CK_BitCast,
-                                                     UO,
-                                                     &Path,
-                                                     VK_RValue);
-
-    NumArgs = 2;
-    SmallVector<Expr *, 2> ArgsV;
-    ArgsV.push_back(ICE);
-
-    std::string Str;
-    Context.getObjCEncodingForType(ValueExpr->getType(), Str);
-
-    llvm::APInt ArrSize = llvm::APInt(32, Str.size() + 1);
-    QualType StrType = Context.getConstantArrayType(Context.CharTy,
-                                                    ArrSize, ArrayType::Normal,
-                                                     0);
-    StringLiteral *SL = StringLiteral::Create(Context, Str, StringLiteral::Ascii,
-                                 /*Pascal=*/false, StrType, SourceLocation());
-
-    ArgsV.push_back(SL);
-    Args = ArgsV;
   }
 
   if (!BoxingMethod) {
@@ -723,23 +679,21 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   }
   
   DiagnoseUseOfDecl(BoxingMethod, SR.getBegin());
-
-  for (unsigned i = 0; i < NumArgs; i++) {
-    Expr *E = Args[i];
-    // Convert the expression to the type that the parameter requires.
-    ParmVarDecl *ParamDecl = BoxingMethod->parameters()[i];
-    InitializedEntity IE = InitializedEntity::InitializeParameter(Context,
-                                                                  ParamDecl);
-    ExprResult ConvertedValueExpr = PerformCopyInitialization(IE,
-                                                              SourceLocation(),
-                                                              E);
-    if (ConvertedValueExpr.isInvalid())
-      return ExprError();
-    Args[i] = ConvertedValueExpr.get();
-  }
-
+  
+  // Convert the expression to the type that the parameter requires.
+  ParmVarDecl *ParamDecl = BoxingMethod->parameters()[0];
+  InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
+                                                                    ParamDecl);
+  ExprResult ConvertedValueExpr = PerformCopyInitialization(Entity,
+                                                            SourceLocation(),
+                                                            ValueExpr);
+  if (ConvertedValueExpr.isInvalid())
+    return ExprError();
+  ValueExpr = ConvertedValueExpr.get();
+  
   ObjCBoxedExpr *BoxedExpr = 
-    new (Context) ObjCBoxedExpr(Args, BoxedType, BoxingMethod, SR);
+    new (Context) ObjCBoxedExpr(ValueExpr, BoxedType,
+                                      BoxingMethod, SR);
   return MaybeBindToTemporary(BoxedExpr);
 }
 

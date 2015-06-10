@@ -2677,7 +2677,7 @@ Stmt *RewriteModernObjC::RewriteObjCBoxedExpr(ObjCBoxedExpr *Exp) {
   MsgExprs.push_back(SelExp);
   
   // User provided sub-expression is the 3rd, and last, argument.
-  Expr *subExpr  = Exp->getSubExpr(0);
+  Expr *subExpr  = Exp->getSubExpr();
   if (ImplicitCastExpr *ICE = dyn_cast<ImplicitCastExpr>(subExpr)) {
     QualType type = ICE->getType();
     const Expr *SubExpr = ICE->IgnoreParenImpCasts();

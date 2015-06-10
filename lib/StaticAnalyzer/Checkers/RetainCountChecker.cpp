@@ -1866,7 +1866,7 @@ void CFRefReport::addGCModeDescription(const LangOptions &LOpts,
   assert(GCModeDescription && "invalid/unknown GC mode");
   addExtraText(GCModeDescription);
 }
-
+#warning ADD isBoxableLiteralExpression
 static bool isNumericLiteralExpression(const Expr *E) {
   // FIXME: This set of cases was copied from SemaExprObjC.
   return isa<IntegerLiteral>(E) || 
@@ -1928,7 +1928,7 @@ PathDiagnosticPiece *CFRefReportVisitor::VisitNode(const ExplodedNode *N,
       os << "NSDictionary literal is an object with a +0 retain count";
     }
     else if (const ObjCBoxedExpr *BL = dyn_cast<ObjCBoxedExpr>(S)) {
-      if (isNumericLiteralExpression(BL->getSubExpr(0)))
+      if (isNumericLiteralExpression(BL->getSubExpr()))
         os << "NSNumber literal is an object with a +0 retain count";
       else {
         const ObjCInterfaceDecl *BoxClass = nullptr;

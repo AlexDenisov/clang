@@ -9906,12 +9906,12 @@ TreeTransform<Derived>::TransformObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCBoxedExpr(ObjCBoxedExpr *E) {
-  ExprResult SubExpr = getDerived().TransformExpr(E->getSubExpr(0));
+  ExprResult SubExpr = getDerived().TransformExpr(E->getSubExpr());
   if (SubExpr.isInvalid())
     return ExprError();
 
   if (!getDerived().AlwaysRebuild() &&
-      SubExpr.get() == E->getSubExpr(0))
+      SubExpr.get() == E->getSubExpr())
     return E;
 
   return getDerived().RebuildObjCBoxedExpr(E->getSourceRange(), SubExpr.get());

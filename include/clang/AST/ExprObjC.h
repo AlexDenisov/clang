@@ -90,54 +90,24 @@ public:
 /// Also used for boxing non-parenthesized numeric literals;
 /// as in: @42 or \@true (c++/objc++) or \@__yes (c/objc).
 class ObjCBoxedExpr : public Expr {
-  // Most expressions need only one sub-expression (e.g. @("hello world")),
-  // but NSValue expressions need two parameters:
-  // actual expression (e.g. view.frame) and @encode (e.g. @encode(CGRect))
-  SmallVector<Stmt *, 2> SubExprs;
+  Stmt *SubExpr;
   ObjCMethodDecl *BoxingMethod;
   SourceRange Range;
-  unsigned NumSubExprs;
 public:
-  ObjCBoxedExpr(ArrayRef<Expr *> Exprs, QualType T,
-                ObjCMethodDecl *method, SourceRange R)
+  ObjCBoxedExpr(Expr *E, QualType T, ObjCMethodDecl *method,
+                     SourceRange R)
   : Expr(ObjCBoxedExprClass, T, VK_RValue, OK_Ordinary, 
-         false, false, false, false),
-         SubExprs(2), BoxingMethod(method), Range(R),
-         NumSubExprs(0) {
-           setSubExprs(Exprs);
-         }
-
+         E->isTypeDependent(), E->isValueDependent(), 
+         E->isInstantiationDependent(), E->containsUnexpandedParameterPack()), 
+         SubExpr(E), BoxingMethod(method), Range(R) {}
   explicit ObjCBoxedExpr(EmptyShell Empty)
-  : Expr(ObjCBoxedExprClass, Empty), SubExprs(2), NumSubExprs(0) {}
+  : Expr(ObjCBoxedExprClass, Empty) {}
   
-  Expr *getSubExpr(int n) { return cast<Expr>(SubExprs[n]); }
-  const Expr *getSubExpr(int n) const { return cast<Expr>(SubExprs[n]); }
-
-  unsigned getNumSubExprs() const { return NumSubExprs; }
-
-  void setSubExprs(ArrayRef<Expr *> Exprs) {
-    unsigned NumSubExprs = Exprs.size();
-    assert(NumSubExprs < 3 && "Too many sub-expressions");
-
-    for (unsigned i = 0; i < NumSubExprs; i++) {
-      Expr *E = Exprs[i];
-      if (E->isTypeDependent())
-        setTypeDependent(true);
-      if (E->isValueDependent())
-        setValueDependent(true);
-      if (E->isInstantiationDependent())
-        setInstantiationDependent(true);
-      if (E->containsUnexpandedParameterPack())
-        setContainsUnexpandedParameterPack(true);
-
-      SubExprs[i] = E;
-    }
-    
-    this->NumSubExprs = NumSubExprs;
-  }
-
+  Expr *getSubExpr() { return cast<Expr>(SubExpr); }
+  const Expr *getSubExpr() const { return cast<Expr>(SubExpr); }
+  
   ObjCMethodDecl *getBoxingMethod() const {
-    return BoxingMethod;
+    return BoxingMethod; 
   }
   
   SourceLocation getAtLoc() const { return Range.getBegin(); }
@@ -153,16 +123,15 @@ public:
   }
   
   // Iterators
-  child_range children() { return child_range(SubExprs.data(),
-                                              SubExprs.data() + NumSubExprs); }
+  child_range children() { return child_range(&SubExpr, &SubExpr+1); }
 
   typedef ConstExprIterator const_arg_iterator;
 
   const_arg_iterator arg_begin() const {
-    return SubExprs.data();
+    return reinterpret_cast<Stmt const * const*>(&SubExpr);
   }
   const_arg_iterator arg_end() const {
-    return SubExprs.data() + NumSubExprs;
+    return reinterpret_cast<Stmt const * const*>(&SubExpr + 1);
   }
   
   friend class ASTStmtReader;

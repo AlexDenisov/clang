@@ -8262,7 +8262,7 @@ Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {
     case Stmt::BlockExprClass:
       return LK_Block;
     case Stmt::ObjCBoxedExprClass: {
-      Expr *Inner = cast<ObjCBoxedExpr>(FromE)->getSubExpr(0)->IgnoreParens();
+      Expr *Inner = cast<ObjCBoxedExpr>(FromE)->getSubExpr()->IgnoreParens();
       switch (Inner->getStmtClass()) {
         case Stmt::IntegerLiteralClass:
         case Stmt::FloatingLiteralClass:

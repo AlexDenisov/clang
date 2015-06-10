@@ -880,10 +880,7 @@ void ASTStmtWriter::VisitObjCStringLiteral(ObjCStringLiteral *E) {
 
 void ASTStmtWriter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   VisitExpr(E);
-  Record.push_back(E->getNumSubExprs());
-  for (unsigned i = 0; i < E->getNumSubExprs(); i++) {
-    Writer.AddStmt(E->getSubExpr(i));
-  }
+  Writer.AddStmt(E->getSubExpr());
   Writer.AddDeclRef(E->getBoxingMethod(), Record);
   Writer.AddSourceRange(E->getSourceRange(), Record);
   Code = serialization::EXPR_OBJC_BOXED_EXPRESSION;
