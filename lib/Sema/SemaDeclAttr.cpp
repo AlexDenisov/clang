@@ -3991,21 +3991,10 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
 }
 
 static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
-  RecordDecl *RD = nullptr;
-  if (TypedefDecl *TD = dyn_cast<TypedefDecl>(D)) {
-    const RecordType *RT = TD->getUnderlyingType()->getAs<RecordType>();
-    RD = RT->getDecl();
-  } else {
-    RD = dyn_cast<RecordDecl>(D);
-  }
-
-  if (RD) {
-    RD->setObjCBoxable();
-  }
-
-  D->addAttr(::new (S.Context)
-             ObjCBoxableAttr(Attr.getRange(), S.Context,
-                             Attr.getAttributeSpellingListIndex()));
+  RecordDecl *RD = dyn_cast<RecordDecl>(D);
+  RD->addAttr(::new (S.Context)
+              ObjCBoxableAttr(Attr.getRange(), S.Context,
+                              Attr.getAttributeSpellingListIndex()));
 }
 
 static void handleObjCOwnershipAttr(Sema &S, Decl *D,

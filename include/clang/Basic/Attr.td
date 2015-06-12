@@ -1127,8 +1127,8 @@ def ObjCRuntimeName : Attr {
 
 def ObjCBoxable : Attr {
   let Spellings = [GNU<"objc_boxable">];
-  let Subjects = SubjectList<[Struct, TypedefName], ErrorDiag,
-        "ExpectedStructOrTypedef">;
+  let Subjects = SubjectList<[Struct], ErrorDiag,
+        "ExpectedStructOrUnion">;
   let Documentation = [Undocumented];
 }
 

@@ -34,9 +34,9 @@
 + (NSValue *)valueWithBytes:(const void *)bytes objCType:(const char *)type;
 @end
 
-typedef struct _some_struct {
+typedef struct __attribute__((objc_boxable)) _some_struct {
   int dummy;
-} some_struct __attribute__((objc_boxable));
+} some_struct;
 
 id testArray(int idx, id p) {
   NSMutableArray *array;

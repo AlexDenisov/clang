@@ -2,39 +2,39 @@
 
 #define BOXABLE __attribute__((objc_boxable))
 
-typedef struct _NSPoint {
+typedef struct BOXABLE _NSPoint {
   int dummy;
-} NSPoint BOXABLE;
+} NSPoint;
 
-typedef struct _NSSize {
+typedef struct BOXABLE _NSSize {
   int dummy;
-} NSSize BOXABLE;
+} NSSize;
 
-typedef struct _NSRect {
+typedef struct BOXABLE _NSRect {
   int dummy;
-} NSRect BOXABLE;
+} NSRect;
 
-typedef struct _CGPoint {
+typedef struct BOXABLE _CGPoint {
   int dummy;
-} CGPoint BOXABLE;
+} CGPoint;
 
-typedef struct _CGSize {
+typedef struct BOXABLE _CGSize {
   int dummy;
-} CGSize BOXABLE;
+} CGSize;
 
-typedef struct _CGRect {
+typedef struct BOXABLE _CGRect {
   int dummy;
-} CGRect BOXABLE;
+} CGRect;
 
-typedef struct _NSRange {
+typedef struct BOXABLE _NSRange {
   int dummy;
-} NSRange BOXABLE;
+} NSRange;
 
-typedef struct _NSEdgeInsets {
+typedef struct BOXABLE _NSEdgeInsets {
   int dummy;
 } NSEdgeInsets;
 
-BOXABLE typedef struct _NSEdgeInsets NSEdgeInsets;
+typedef struct BOXABLE _NSEdgeInsets NSEdgeInsets;
 
 typedef struct _SomeStruct {
   double d;

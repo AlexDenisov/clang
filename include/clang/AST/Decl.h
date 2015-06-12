@@ -3249,9 +3249,6 @@ class RecordDecl : public TagDecl {
   /// when needed.
   mutable bool LoadedFieldsFromExternalStorage : 1;
 
-  /// ObjCBoxable - This is true if this struct can be boxed into NSValue
-  bool ObjCBoxable : 1;
-
   friend class DeclContext;
 
 protected:
@@ -3305,9 +3302,6 @@ public:
 
   bool hasVolatileMember() const { return HasVolatileMember; }
   void setHasVolatileMember (bool val) { HasVolatileMember = val; }
-
-  bool isObjCBoxable() const { return ObjCBoxable; }
-  void setObjCBoxable() { ObjCBoxable = true; }
   
   /// \brief Determines whether this declaration represents the
   /// injected class name.

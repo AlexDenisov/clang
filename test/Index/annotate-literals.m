@@ -33,9 +33,9 @@ typedef unsigned char BOOL;
 + (NSValue *)valueWithBytes:(const void *)value objCType:(const char *)type;
 @end
 
-typedef struct _c_struct {
+typedef struct __attribute__((objc_boxable)) _c_struct {
   int dummy;
-} c_struct __attribute__((objc_boxable));
+} c_struct;
 
 void test_literals(id k1, id o1, id k2, id o2, id k3, c_struct s) {
   id objects = @[ o1, o2 ];
