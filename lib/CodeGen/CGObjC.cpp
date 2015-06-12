@@ -63,10 +63,10 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   // Generate the correct selector for this literal's concrete type.
   // Get the method.
   const ObjCMethodDecl *BoxingMethod = E->getBoxingMethod();
+  const Expr *SubExpr = E->getSubExpr();
   assert(BoxingMethod && "BoxingMethod is null");
   assert(BoxingMethod->isClassMethod() && "BoxingMethod must be a class method");
   Selector Sel = BoxingMethod->getSelector();
-  
   // Generate a reference to the class pointer, which will be the receiver.
   // Assumes that the method was introduced in the class that should be
   // messaged (avoids pulling it out of the result type).
@@ -74,8 +74,49 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   const ObjCInterfaceDecl *ClassDecl = BoxingMethod->getClassInterface();
   llvm::Value *Receiver = Runtime.GetClass(*this, ClassDecl);
 
+  const ParmVarDecl *argDecl = *BoxingMethod->param_begin();
+  QualType ArgQT = argDecl->getType().getUnqualifiedType();
+  RValue RV = EmitAnyExpr(SubExpr);
   CallArgList Args;
-  EmitCallArgs(Args, BoxingMethod, E->arg_begin(), E->arg_end());
+  Args.add(RV, ArgQT);
+  
+  // ObjCBoxedExpr supports boxing of structs and unions 
+  // via [NSValue valueWithBytes:objCType:]
+  if (const UnaryOperator *UO = 
+                              dyn_cast<UnaryOperator>(SubExpr->IgnoreCasts())) {
+    QualType ValueType(UO->getSubExpr()->IgnoreCasts()->getType());
+    if (ValueType->isObjCBoxableStructureType()) {
+      ASTContext &Context = getContext();
+      QualType CharTy = Context.CharTy;
+      
+      std::string Str;
+      Context.getObjCEncodingForType(ValueType, Str);
+      llvm::APInt ArrSize = llvm::APInt(32, Str.size() + 1);
+      QualType StrType = Context.getConstantArrayType(CharTy,
+                                                      ArrSize, 
+                                                      ArrayType::Normal,
+                                                      0);
+      
+      StringLiteral *SL = StringLiteral::Create(Context, Str, 
+                                                StringLiteral::Ascii,
+                                                /*Pascal=*/false, 
+                                                StrType, SourceLocation());
+      
+      CXXCastPath Path;
+      QualType ConstCharType = Context.getPointerType(CharTy.withConst());
+      ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
+                                                       ConstCharType,
+                                                       CK_ArrayToPointerDecay,
+                                                       SL,
+                                                       &Path,
+                                                       VK_RValue);
+      
+      RValue SLRV = EmitAnyExpr(ICE);
+      const ParmVarDecl *SLArgDecl = *BoxingMethod->param_begin() + 1;
+      QualType SLArgQT = SLArgDecl->getType().getUnqualifiedType();
+      Args.add(SLRV, SLArgQT);
+    }
+  }
 
   RValue result = Runtime.GenerateMessageSend(
       *this, ReturnValueSlot(), BoxingMethod->getReturnType(), Sel, Receiver,
