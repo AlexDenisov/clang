@@ -20,6 +20,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Mangle.h"
+#include "clang/AST/ASTMutationListener.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
@@ -3991,10 +3992,21 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
 }
 
 static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
-  RecordDecl *RD = dyn_cast<RecordDecl>(D);
-  RD->addAttr(::new (S.Context)
-              ObjCBoxableAttr(Attr.getRange(), S.Context,
-                              Attr.getAttributeSpellingListIndex()));
+  RecordDecl *RD = nullptr;
+  if (const TypedefDecl *TD = dyn_cast<TypedefDecl>(D)) {
+    const RecordType *RT = TD->getUnderlyingType()->getAs<RecordType>();
+    RD = RT->getDecl();
+  } else {
+    RD = dyn_cast<RecordDecl>(D);
+  }
+  if (RD) {
+    ObjCBoxableAttr *BoxableAttr = ::new (S.Context) 
+                          ObjCBoxableAttr(Attr.getRange(), S.Context,
+                                          Attr.getAttributeSpellingListIndex());
+    RD->addAttr(BoxableAttr);
+    if (ASTMutationListener *L = S.getASTMutationListener())
+      L->AddedAttributeToRecord(BoxableAttr, RD);
+  }
 }
 
 static void handleObjCOwnershipAttr(Sema &S, Decl *D,

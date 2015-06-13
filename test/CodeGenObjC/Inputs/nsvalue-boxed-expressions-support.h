@@ -6,22 +6,22 @@
 typedef unsigned long NSUInteger;
 typedef double CGFloat;
 
-BOXABLE typedef struct _NSRange {
+typedef struct BOXABLE _NSRange {
     NSUInteger location;
     NSUInteger length;
 } NSRange;
 
-BOXABLE typedef struct _NSPoint {
+typedef struct BOXABLE _NSPoint {
     CGFloat x;
     CGFloat y;
 } NSPoint;
 
-BOXABLE typedef struct _NSSize {
+typedef struct BOXABLE _NSSize {
     CGFloat width;
     CGFloat height;
 } NSSize;
 
-BOXABLE typedef struct _NSRect {
+typedef struct BOXABLE _NSRect {
     NSPoint origin;
     NSSize size;
 } NSRect;
@@ -30,19 +30,19 @@ struct CGPoint {
   CGFloat x;
   CGFloat y;
 };
-BOXABLE typedef struct CGPoint CGPoint;
+typedef struct CGPoint CGPoint BOXABLE;
 
 struct CGSize {
   CGFloat width;
   CGFloat height;
 };
-BOXABLE typedef struct CGSize CGSize;
+typedef struct CGSize CGSize BOXABLE;
 
 struct CGRect {
   CGPoint origin;
   CGSize size;
 };
-BOXABLE typedef struct CGRect CGRect;
+typedef struct CGRect CGRect BOXABLE;
 
 struct NSEdgeInsets {
   CGFloat top;
@@ -50,7 +50,7 @@ struct NSEdgeInsets {
   CGFloat bottom;
   CGFloat right;
 };
-BOXABLE typedef struct NSEdgeInsets NSEdgeInsets;
+typedef struct NSEdgeInsets NSEdgeInsets BOXABLE;
 
 @interface NSValue
 

@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Frontend/MultiplexConsumer.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/DeclGroup.h"
 #include "clang/Serialization/ASTDeserializationListener.h"
@@ -128,6 +129,8 @@ public:
   void DeclarationMarkedUsed(const Decl *D) override;
   void DeclarationMarkedOpenMPThreadPrivate(const Decl *D) override;
   void RedefinedHiddenDefinition(const NamedDecl *D, Module *M) override;
+  void AddedAttributeToRecord(const Attr *Attr, 
+                              const RecordDecl *Record) override;
 
 private:
   std::vector<ASTMutationListener*> Listeners;
@@ -225,6 +228,13 @@ void MultiplexASTMutationListener::RedefinedHiddenDefinition(const NamedDecl *D,
                                                              Module *M) {
   for (auto *L : Listeners)
     L->RedefinedHiddenDefinition(D, M);
+}
+  
+void MultiplexASTMutationListener::AddedAttributeToRecord(
+                                                    const Attr *Attr, 
+                                                    const RecordDecl *Record) {
+  for (auto *L : Listeners)
+    L->AddedAttributeToRecord(Attr, Record);
 }
 
 }  // end namespace clang

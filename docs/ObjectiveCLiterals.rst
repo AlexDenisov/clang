@@ -235,13 +235,13 @@ you may need to add the attribute via ``typedef``.
 
 .. code-block:: objc
 
-    struct Point {
+    struct __attribute__((objc_boxable)) Point {
         // ...
-    } __attribute__((objc_boxable));
+    };
 
-    typedef struct _Size {
+    typedef struct __attribute__((objc_boxable)) _Size {
         // ...
-    } Size __attribute__((objc_boxable));
+    } Size;
 
     typedef struct _Rect {
         // ...
@@ -255,7 +255,7 @@ you may need to add the attribute via ``typedef``.
     Rect r;
     NSValue *bad_rect = @(r);       // error
 
-    __attribute__((objc_boxable)) typedef struct _Rect Rect;
+    typedef struct __attribute__((objc_boxable)) _Rect Rect;
 
     NSValue *good_rect = @(r);      // ok
 
