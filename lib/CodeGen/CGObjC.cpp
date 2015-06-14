@@ -111,10 +111,10 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
                                                        &Path,
                                                        VK_RValue);
       
-      RValue SLRV = EmitAnyExpr(ICE);
-      const ParmVarDecl *SLArgDecl = *BoxingMethod->param_begin() + 1;
-      QualType SLArgQT = SLArgDecl->getType().getUnqualifiedType();
-      Args.add(SLRV, SLArgQT);
+      RValue RV = EmitAnyExpr(ICE);
+      const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
+      QualType ArgQT = ArgDecl->getType().getUnqualifiedType();
+      Args.add(RV, ArgQT);
     }
   }
 

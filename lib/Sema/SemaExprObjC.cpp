@@ -576,7 +576,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     BoxedType = NSNumberPointer;
   } else if (ValueType->isObjCBoxableStructureType()) {
     // Support for structure types, that marked as objc_boxable
-    // struct s { ... } __attribute__((objc_boxable));
+    // struct __attribute__((objc_boxable)) s { ... };
     
     // Look up the NSValue class, if we haven't done so already. It's cached
     // in the Sema instance.
