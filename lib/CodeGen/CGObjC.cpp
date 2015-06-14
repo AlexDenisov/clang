@@ -115,6 +115,8 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
       const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
       QualType ArgQT = ArgDecl->getType().getUnqualifiedType();
       Args.add(RV, ArgQT);
+      Context.Deallocate(SL);
+      Context.Deallocate(ICE);
     }
   }
 
