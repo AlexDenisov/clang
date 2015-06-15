@@ -668,6 +668,15 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       ValueWithBytesObjCTypeMethod = BoxingMethod;
     }
     
+    if (getLangOpts().CPlusPlus && ValueExpr->isGLValue()) {
+      ExprResult Temp = PerformCopyInitialization(
+                            InitializedEntity::InitializeTemporary(ValueType),
+                            ValueExpr->getExprLoc(), ValueExpr);
+      if (Temp.isInvalid())
+        return ExprError();
+      ValueExpr = Temp.get();
+    }
+    
     QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
     SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
     UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
