@@ -86,37 +86,17 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
                               dyn_cast<UnaryOperator>(SubExpr->IgnoreCasts())) {
     QualType ValueType(UO->getSubExpr()->IgnoreCasts()->getType());
     if (ValueType->isObjCBoxableStructureType()) {
-      ASTContext &Context = getContext();
-      QualType CharTy = Context.CharTy;
+
+      const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
+      QualType ArgTy = ArgDecl->getType();
       
       std::string Str;
-      Context.getObjCEncodingForType(ValueType, Str);
-      llvm::APInt ArrSize = llvm::APInt(32, Str.size() + 1);
-      QualType StrType = Context.getConstantArrayType(CharTy,
-                                                      ArrSize, 
-                                                      ArrayType::Normal,
-                                                      0);
+      getContext().getObjCEncodingForType(ValueType, Str);
+
+      llvm::GlobalVariable *GV = CGM.GetAddrOfConstantCString(Str);
+      llvm::Value *Cast = Builder.CreateBitCast(GV, ConvertType(ArgTy));
       
-      StringLiteral *SL = StringLiteral::Create(Context, Str, 
-                                                StringLiteral::Ascii,
-                                                /*Pascal=*/false, 
-                                                StrType, SourceLocation());
-      
-      CXXCastPath Path;
-      QualType ConstCharType = Context.getPointerType(CharTy.withConst());
-      ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
-                                                       ConstCharType,
-                                                       CK_ArrayToPointerDecay,
-                                                       SL,
-                                                       &Path,
-                                                       VK_RValue);
-      
-      RValue RV = EmitAnyExpr(ICE);
-      const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
-      QualType ArgQT = ArgDecl->getType().getUnqualifiedType();
-      Args.add(RV, ArgQT);
-      Context.Deallocate(SL);
-      Context.Deallocate(ICE);
+      Args.add(RValue::get(Cast), ArgTy.getUnqualifiedType());
     }
   }
 
