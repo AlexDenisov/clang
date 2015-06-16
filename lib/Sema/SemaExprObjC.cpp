@@ -677,6 +677,13 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       ValueExpr = Temp.get();
     }
     
+    if (!ValueType.isTriviallyCopyableType(Context)) {
+      Diag(SR.getBegin(), 
+           diag::err_objc_non_trivially_copyable_boxed_expression_type)
+        << ValueType << ValueExpr->getSourceRange();
+      return ExprError();
+    }
+    
     QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
     SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
     UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
