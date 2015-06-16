@@ -1866,7 +1866,7 @@ void CFRefReport::addGCModeDescription(const LangOptions &LOpts,
   assert(GCModeDescription && "invalid/unknown GC mode");
   addExtraText(GCModeDescription);
 }
-#warning ADD isBoxableLiteralExpression
+
 static bool isNumericLiteralExpression(const Expr *E) {
   // FIXME: This set of cases was copied from SemaExprObjC.
   return isa<IntegerLiteral>(E) || 
