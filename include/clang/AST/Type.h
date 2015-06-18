@@ -1564,7 +1564,7 @@ public:
   bool isRecordType() const;
   bool isClassType() const;
   bool isStructureType() const;
-  bool isObjCBoxableStructureType() const;
+  bool isObjCBoxableRecordType() const;
   bool isInterfaceType() const;
   bool isStructureOrClassType() const;
   bool isUnionType() const;

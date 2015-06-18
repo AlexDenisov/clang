@@ -86,7 +86,7 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   if (const UnaryOperator *UO = 
                               dyn_cast<UnaryOperator>(SubExpr->IgnoreCasts())) {
     QualType ValueType(UO->getSubExpr()->IgnoreCasts()->getType());
-    if (ValueType->isObjCBoxableStructureType()) {
+    if (ValueType->isObjCBoxableRecordType()) {
 
       const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
       QualType ArgTy = ArgDecl->getType();

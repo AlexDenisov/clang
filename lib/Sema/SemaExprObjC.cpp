@@ -574,7 +574,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(),
                                             ET->getDecl()->getIntegerType());
     BoxedType = NSNumberPointer;
-  } else if (ValueType->isObjCBoxableStructureType()) {
+  } else if (ValueType->isObjCBoxableRecordType()) {
     // Support for structure types, that marked as objc_boxable
     // struct __attribute__((objc_boxable)) s { ... };
     
@@ -618,7 +618,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       // Look for the appropriate method within NSValue.
       BoxingMethod = NSValueDecl->lookupClassMethod(ValueWithBytesObjCType);
       if (!BoxingMethod && getLangOpts().DebuggerObjCLiteral) {
-        // Debugger needs to work even if NSString hasn't been defined.
+        // Debugger needs to work even if NSValue hasn't been defined.
         TypeSourceInfo *ReturnTInfo = nullptr;
         ObjCMethodDecl *M = ObjCMethodDecl::Create(
                                                Context,
