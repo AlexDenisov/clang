@@ -3992,20 +3992,20 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
 }
 
 static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
+  ObjCBoxableAttr *BoxableAttr = ::new (S.Context)
+                                    ObjCBoxableAttr(Attr.getRange(), S.Context,
+                                         Attr.getAttributeSpellingListIndex());
   RecordDecl *RD = nullptr;
   if (const TypedefDecl *TD = dyn_cast<TypedefDecl>(D)) {
     const RecordType *RT = TD->getUnderlyingType()->getAs<RecordType>();
     RD = RT->getDecl();
+    if (ASTMutationListener *L = S.getASTMutationListener())
+      L->AddedAttributeToRecord(BoxableAttr, RD);
   } else {
     RD = dyn_cast<RecordDecl>(D);
   }
   if (RD) {
-    ObjCBoxableAttr *BoxableAttr = ::new (S.Context) 
-                          ObjCBoxableAttr(Attr.getRange(), S.Context,
-                                          Attr.getAttributeSpellingListIndex());
     RD->addAttr(BoxableAttr);
-    if (ASTMutationListener *L = S.getASTMutationListener())
-      L->AddedAttributeToRecord(BoxableAttr, RD);
   }
 }
 
