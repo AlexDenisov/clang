@@ -83,22 +83,19 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   
   // ObjCBoxedExpr supports boxing of structs and unions 
   // via [NSValue valueWithBytes:objCType:]
-  if (const UnaryOperator *UO = 
-                              dyn_cast<UnaryOperator>(SubExpr->IgnoreCasts())) {
-    QualType ValueType(UO->getSubExpr()->IgnoreCasts()->getType());
-    if (ValueType->isObjCBoxableRecordType()) {
+  const QualType SubExprType(SubExpr->IgnoreCasts()->getType());
+  const QualType ValueType(SubExprType.getCanonicalType()->getPointeeType());
+  if (!ValueType.isNull() && ValueType->isObjCBoxableRecordType()) {
+    const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
+    QualType ArgTy = ArgDecl->getType();
 
-      const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
-      QualType ArgTy = ArgDecl->getType();
-      
-      std::string Str;
-      getContext().getObjCEncodingForType(ValueType, Str);
+    std::string Str;
+    getContext().getObjCEncodingForType(ValueType, Str);
 
-      llvm::GlobalVariable *GV = CGM.GetAddrOfConstantCString(Str);
-      llvm::Value *Cast = Builder.CreateBitCast(GV, ConvertType(ArgTy));
-      
-      Args.add(RValue::get(Cast), ArgTy.getUnqualifiedType());
-    }
+    llvm::GlobalVariable *GV = CGM.GetAddrOfConstantCString(Str);
+    llvm::Value *Cast = Builder.CreateBitCast(GV, ConvertType(ArgTy));
+
+    Args.add(RValue::get(Cast), ArgTy.getUnqualifiedType());
   }
 
   RValue result = Runtime.GenerateMessageSend(
