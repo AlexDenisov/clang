@@ -30,11 +30,11 @@ typedef struct BOXABLE _NSRange {
   int dummy;
 } NSRange;
 
-typedef struct BOXABLE _NSEdgeInsets {
+typedef struct _NSEdgeInsets {
   int dummy;
 } NSEdgeInsets;
 
-typedef struct BOXABLE _NSEdgeInsets NSEdgeInsets;
+typedef struct _NSEdgeInsets NSEdgeInsets BOXABLE;
 
 typedef struct _SomeStruct {
   double d;
