@@ -40,6 +40,10 @@ typedef struct _SomeStruct {
   double d;
 } SomeStruct;
 
+typedef union BOXABLE _BoxableUnion {
+  int dummy;
+} BoxableUnion;
+
 void checkNSValueDiagnostic() {
   NSRect rect;
   id value = @(rect); // expected-error{{NSValue must be available to use Objective-C boxed expressions}}
@@ -73,6 +77,9 @@ int main() {
 
   NSEdgeInsets edge_insets;
   id edge_insets_object = @(edge_insets);
+
+  BoxableUnion boxable_union;
+  id boxed_union = @(boxable_union);
 
   SomeStruct s;
   id err = @(s); // expected-error{{illegal type 'SomeStruct' (aka 'struct _SomeStruct') used in a boxed expression}}
