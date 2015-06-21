@@ -4001,7 +4001,7 @@ static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
     // but she doesn't have access to the declaration (legacy/third-party code)
     // then she can 'enable' this feature via trick with a typedef
     // e.g.:
-    // typedef struct __attribute((objc_boxable)) legacy_struct legacy_struct;
+    // typedef struct legacy_struct legacy_struct __attribute((objc_boxable));
     const RecordType *RT = TD->getUnderlyingType()->getAs<RecordType>();
     RD = RT->getDecl();
     

@@ -255,7 +255,7 @@ you may need to add the attribute via ``typedef``.
     Rect r;
     NSValue *bad_rect = @(r);       // error
 
-    typedef struct __attribute__((objc_boxable))  _Rect Rect;
+    typedef struct _Rect Rect __attribute__((objc_boxable));
 
     NSValue *good_rect = @(r);      // ok
 
@@ -582,7 +582,7 @@ checks. Here are examples of their use:
     #endif
 
     #if __has_attribute(objc_boxable)
-        typedef struct __attribute__((objc_boxable)) _Rect Rect;
+        typedef struct _Rect Rect __attribute__((objc_boxable));
     #endif
 
     #if __has_feature(objc_boxed_nsvalue_expressions)
