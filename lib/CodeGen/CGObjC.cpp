@@ -86,7 +86,7 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   const QualType SubExprType(SubExpr->IgnoreCasts()->getType());
   const QualType ValueType(SubExprType.getCanonicalType()->getPointeeType());
   if (!ValueType.isNull() && ValueType->isObjCBoxableRecordType()) {
-    const ParmVarDecl *ArgDecl = *BoxingMethod->param_begin() + 1;
+    const ParmVarDecl *ArgDecl = *(BoxingMethod->param_begin() + 1);
     QualType ArgTy = ArgDecl->getType();
 
     std::string Str;

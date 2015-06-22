@@ -582,7 +582,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     // in the Sema instance.
     if (!NSValueDecl) {
       IdentifierInfo *NSValueId =
-      NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
+        NSAPIObj->getNSClassId(NSAPI::ClassId_NSValue);
       NamedDecl *IF = LookupSingleName(TUScope, NSValueId,
                                        SR.getBegin(), Sema::LookupOrdinaryName);
       NSValueDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
