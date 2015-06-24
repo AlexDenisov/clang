@@ -682,23 +682,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
         << ValueType << ValueExpr->getSourceRange();
       return ExprError();
     }
-    
-//    QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
-//    SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
-//    UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
-//                                                    ExprPtrType,
-//                                                    VK_RValue, OK_Ordinary,
-//                                                    ESL);
-//    CXXCastPath Path;
-//    QualType ConstVoidType = Context.getPointerType(Context.VoidTy.withConst());
-//    ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
-//                                                     ConstVoidType,
-//                                                     CK_BitCast,
-//                                                     UO,
-//                                                     &Path,
-//                                                     VK_RValue);
-//    ValueExpr = ICE;
-    
+
     BoxingMethod = ValueWithBytesObjCTypeMethod;
     BoxedType = NSValuePointer;
   }

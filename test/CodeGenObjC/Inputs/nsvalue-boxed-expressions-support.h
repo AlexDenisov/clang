@@ -50,7 +50,7 @@ struct NSEdgeInsets {
   CGFloat bottom;
   CGFloat right;
 };
-typedef struct NSEdgeInsets NSEdgeInsets BOXABLE;
+typedef struct BOXABLE NSEdgeInsets NSEdgeInsets;
 
 @interface NSValue
 
