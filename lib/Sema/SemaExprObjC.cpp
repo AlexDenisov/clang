@@ -563,7 +563,6 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     // Look for the appropriate method within NSNumber.
     BoxingMethod = getNSNumberFactoryMethod(*this, SR.getBegin(), ValueType);
     BoxedType = NSNumberPointer;
-
   } else if (const EnumType *ET = ValueType->getAs<EnumType>()) {
     if (!ET->getDecl()->isComplete()) {
       Diag(SR.getBegin(), diag::err_objc_incomplete_boxed_expression_type)
@@ -684,21 +683,21 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       return ExprError();
     }
     
-    QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
-    SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
-    UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
-                                                    ExprPtrType,
-                                                    VK_RValue, OK_Ordinary,
-                                                    ESL);
-    CXXCastPath Path;
-    QualType ConstVoidType = Context.getPointerType(Context.VoidTy.withConst());
-    ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
-                                                     ConstVoidType,
-                                                     CK_BitCast,
-                                                     UO,
-                                                     &Path,
-                                                     VK_RValue);
-    ValueExpr = ICE;
+//    QualType ExprPtrType = Context.getPointerType(ValueExpr->getType());
+//    SourceLocation ESL = ValueExpr->getSourceRange().getBegin();
+//    UnaryOperator *UO = new (Context) UnaryOperator(ValueExpr, UO_AddrOf,
+//                                                    ExprPtrType,
+//                                                    VK_RValue, OK_Ordinary,
+//                                                    ESL);
+//    CXXCastPath Path;
+//    QualType ConstVoidType = Context.getPointerType(Context.VoidTy.withConst());
+//    ImplicitCastExpr *ICE = ImplicitCastExpr::Create(Context,
+//                                                     ConstVoidType,
+//                                                     CK_BitCast,
+//                                                     UO,
+//                                                     &Path,
+//                                                     VK_RValue);
+//    ValueExpr = ICE;
     
     BoxingMethod = ValueWithBytesObjCTypeMethod;
     BoxedType = NSValuePointer;
@@ -711,14 +710,21 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   }
   
   DiagnoseUseOfDecl(BoxingMethod, SR.getBegin());
+
+  ExprResult ConvertedValueExpr;
+  if (ValueType->isObjCBoxableRecordType()) {
+    InitializedEntity IE = InitializedEntity::InitializeTemporary(ValueType);
+    ConvertedValueExpr = PerformCopyInitialization(IE, SourceLocation(),
+                                                   ValueExpr);
+  } else {
+    // Convert the expression to the type that the parameter requires.
+    ParmVarDecl *ParamDecl = BoxingMethod->parameters()[0];
+    InitializedEntity IE = InitializedEntity::InitializeParameter(Context,
+                                                                  ParamDecl);
+    ConvertedValueExpr = PerformCopyInitialization(IE, SourceLocation(),
+                                                   ValueExpr);
+  }
   
-  // Convert the expression to the type that the parameter requires.
-  ParmVarDecl *ParamDecl = BoxingMethod->parameters()[0];
-  InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
-                                                                    ParamDecl);
-  ExprResult ConvertedValueExpr = PerformCopyInitialization(Entity,
-                                                            SourceLocation(),
-                                                            ValueExpr);
   if (ConvertedValueExpr.isInvalid())
     return ExprError();
   ValueExpr = ConvertedValueExpr.get();
