@@ -667,15 +667,6 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       ValueWithBytesObjCTypeMethod = BoxingMethod;
     }
     
-    if (getLangOpts().CPlusPlus && ValueExpr->isGLValue()) {
-      ExprResult Temp = PerformCopyInitialization(
-                            InitializedEntity::InitializeTemporary(ValueType),
-                            ValueExpr->getExprLoc(), ValueExpr);
-      if (Temp.isInvalid())
-        return ExprError();
-      ValueExpr = Temp.get();
-    }
-    
     if (!ValueType.isTriviallyCopyableType(Context)) {
       Diag(SR.getBegin(), 
            diag::err_objc_non_trivially_copyable_boxed_expression_type)
@@ -698,7 +689,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   ExprResult ConvertedValueExpr;
   if (ValueType->isObjCBoxableRecordType()) {
     InitializedEntity IE = InitializedEntity::InitializeTemporary(ValueType);
-    ConvertedValueExpr = PerformCopyInitialization(IE, SourceLocation(),
+    ConvertedValueExpr = PerformCopyInitialization(IE, ValueExpr->getExprLoc(), 
                                                    ValueExpr);
   } else {
     // Convert the expression to the type that the parameter requires.
