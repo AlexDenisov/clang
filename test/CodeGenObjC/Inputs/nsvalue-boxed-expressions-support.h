@@ -30,19 +30,19 @@ struct CGPoint {
   CGFloat x;
   CGFloat y;
 };
-typedef struct CGPoint CGPoint BOXABLE;
+typedef struct BOXABLE CGPoint CGPoint;
 
 struct CGSize {
   CGFloat width;
   CGFloat height;
 };
-typedef struct CGSize CGSize BOXABLE;
+typedef struct BOXABLE CGSize CGSize;
 
 struct CGRect {
   CGPoint origin;
   CGSize size;
 };
-typedef struct CGRect CGRect BOXABLE;
+typedef struct BOXABLE CGRect CGRect;
 
 struct NSEdgeInsets {
   CGFloat top;

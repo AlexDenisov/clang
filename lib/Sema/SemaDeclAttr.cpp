@@ -3991,38 +3991,31 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
                                  Attr.getAttributeSpellingListIndex()));
 }
 
+// when a user wants to use objc_boxable with a union or struct
+// but she doesn't have access to the declaration (legacy/third-party code)
+// then she can 'enable' this feature via trick with a typedef
+// e.g.:
+// typedef struct __attribute((objc_boxable)) legacy_struct legacy_struct;
 static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
-  ObjCBoxableAttr *BoxableAttr = ::new (S.Context)
-                                    ObjCBoxableAttr(Attr.getRange(), S.Context,
-                                         Attr.getAttributeSpellingListIndex());
-  RecordDecl *RD = nullptr;
   bool notify = false;
-  if (const TypedefDecl *TD = dyn_cast<TypedefDecl>(D)) {
-    // when a user wants to use objc_boxable with a union or struct
-    // but she doesn't have access to the declaration (legacy/third-party code)
-    // then she can 'enable' this feature via trick with a typedef
-    // e.g.:
-    // typedef struct __attribute((objc_boxable)) legacy_struct legacy_struct;
-    const RecordType *RT = TD->getUnderlyingType()->getAs<RecordType>();
-    RD = RT->getDecl();
-    notify = true;
-  } else {
-    RD = dyn_cast<RecordDecl>(D);
-  }
+
+  RecordDecl *RD = dyn_cast<RecordDecl>(D);
   if (RD && RD->getDefinition()) {
-    notify = true;
     RD = RD->getDefinition();
+    notify = true;
   }
-  
+
   if (RD) {
+    ObjCBoxableAttr *BoxableAttr = ::new (S.Context)
+                          ObjCBoxableAttr(Attr.getRange(), S.Context,
+                                          Attr.getAttributeSpellingListIndex());
     RD->addAttr(BoxableAttr);
-  }
-  
-  if (notify) {
-    // we need to notify ASTReader/ASTWriter about
-    // modification of existing declaration
-    if (ASTMutationListener *L = S.getASTMutationListener())
-      L->AddedAttributeToRecord(BoxableAttr, RD);
+    if (notify) {
+      // we need to notify ASTReader/ASTWriter about
+      // modification of existing declaration
+      if (ASTMutationListener *L = S.getASTMutationListener())
+        L->AddedAttributeToRecord(BoxableAttr, RD);
+    }
   }
 }
 
