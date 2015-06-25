@@ -122,7 +122,7 @@ public:
   ///        if any.
   virtual void RedefinedHiddenDefinition(const NamedDecl *D, Module *M) {}
   
-  /// \bried An attribute was added to a RecordDecl
+  /// \brief An attribute was added to a RecordDecl
   ///
   /// \param Attr The attribute that was added to the Record
   ///
