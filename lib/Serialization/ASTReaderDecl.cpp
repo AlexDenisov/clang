@@ -3914,7 +3914,8 @@ void ASTDeclReader::UpdateDecl(Decl *D, ModuleFile &ModuleFile,
     case UPD_ADDED_ATTR_TO_RECORD:
       AttrVec Attrs;
       Reader.ReadAttributes(F, Attrs, Record, Idx);
-      D->setAttrsImpl(Attrs, Reader.getContext());
+      assert(Attrs.size() == 1);
+      D->addAttr(Attrs[0]);
       break;
     }
   }
