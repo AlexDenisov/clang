@@ -76,8 +76,8 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   llvm::Value *Receiver = Runtime.GetClass(*this, ClassDecl);
 
   CallArgList Args;
-  const ParmVarDecl *argDecl = *BoxingMethod->param_begin();
-  QualType ArgQT = argDecl->getType().getUnqualifiedType();
+  const ParmVarDecl *ParamDecl = *BoxingMethod->param_begin();
+  QualType ParamQT = ParamDecl->getType().getUnqualifiedType();
   
   // ObjCBoxedExpr supports boxing of structs and unions 
   // via [NSValue valueWithBytes:objCType:]
@@ -85,24 +85,25 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   if (ValueType->isObjCBoxableRecordType()) {
     // Emit CodeGen for first parameter
     // and cast value to correct type
-    RValue RV = EmitAnyExprToTemp(SubExpr);
-    llvm::Value *BitCast = Builder.CreateBitCast(RV.getAggregateAddr(),
-                                                 ConvertType(ArgQT));
-    Args.add(RValue::get(BitCast), ArgQT);
+    llvm::Value *Temporary = CreateMemTemp(SubExpr->getType());
+    EmitAnyExprToMem(SubExpr, Temporary, Qualifiers(), /*isInit*/ true);
+    llvm::Value *BitCast = Builder.CreateBitCast(Temporary,
+                                                 ConvertType(ParamQT));
+    Args.add(RValue::get(BitCast), ParamQT);
 
     // Create char array to store type encoding
     std::string Str;
     getContext().getObjCEncodingForType(ValueType, Str);
     llvm::GlobalVariable *GV = CGM.GetAddrOfConstantCString(Str);
     
-    // Cast type enconding to correct type
-    const ParmVarDecl *ArgDecl = BoxingMethod->parameters()[1];
-    QualType ArgTy = ArgDecl->getType().getUnqualifiedType();
-    llvm::Value *Cast = Builder.CreateBitCast(GV, ConvertType(ArgTy));
+    // Cast type encoding to correct type
+    const ParmVarDecl *EncodingDecl = BoxingMethod->parameters()[1];
+    QualType EncodingQT = EncodingDecl->getType().getUnqualifiedType();
+    llvm::Value *Cast = Builder.CreateBitCast(GV, ConvertType(EncodingQT));
 
-    Args.add(RValue::get(Cast), ArgTy);
+    Args.add(RValue::get(Cast), EncodingQT);
   } else {
-    Args.add(EmitAnyExpr(SubExpr), ArgQT);
+    Args.add(EmitAnyExpr(SubExpr), ParamQT);
   }
 
   RValue result = Runtime.GenerateMessageSend(
