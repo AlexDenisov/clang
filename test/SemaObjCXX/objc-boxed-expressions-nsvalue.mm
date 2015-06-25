@@ -101,3 +101,18 @@ void rvalue() {
   id rv_rect = @(getRect());
   id rv_some_struct = @(getSomeStruct()); // expected-error {{illegal type 'SomeStruct' (aka '_SomeStruct') used in a boxed expression}}
 }
+
+template <class T> id box(T value) { return @(value); } // expected-error{{non-trivially copyable type 'NonTriviallyCopyable' cannot be used in a boxed expression}}
+void test_template_1(NSRect rect, NonTriviallyCopyable ntc) {
+ id x = box(rect);
+ id y = box(ntc);  // expected-note{{in instantiation of function template specialization 'box<NonTriviallyCopyable>' requested here}}
+}
+
+template <unsigned i> id boxRect(NSRect rect) { return @(rect); }
+template <unsigned i> id boxNTC(NonTriviallyCopyable ntc) { return @(ntc); }  // expected-error{{non-trivially copyable type 'NonTriviallyCopyable' cannot be used in a boxed expression}}
+void test_template_2(NSRect rect, NonTriviallyCopyable ntc) {
+ id x = boxRect<0>(rect);
+ id y = boxNTC<0>(ntc);
+}
+
+
