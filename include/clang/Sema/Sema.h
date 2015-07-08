@@ -738,7 +738,9 @@ public:
   ObjCMethodDecl *ArrayWithObjectsMethod;
 
   /// \brief The declaration of the Objective-C NSDictionary class.
-  ObjCInterfaceDecl *NSDictionaryDecl;
+  ObjCInterfaceDecl *_NSDictionaryDecl;
+
+  ObjCInterfaceDecl *getNSDictionaryDecl(SourceLocation Loc);
 
   /// \brief Pointer to NSMutableDictionary type (NSMutableDictionary *).
   QualType NSMutableDictionaryPointer;

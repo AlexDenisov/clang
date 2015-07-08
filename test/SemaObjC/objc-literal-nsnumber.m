@@ -71,10 +71,10 @@ int main() {
 }
 
 // Dictionary test
-@class NSDictionary;
+@class NSDictionary;  // expected-note {{forward declaration of class here}}
 
 NSDictionary *err() {
-  return @{@"name" : @"value"}; // expected-error {{declaration of 'dictionaryWithObjects:forKeys:count:' is missing in NSDictionary class}}
+  return @{@"name" : @"value"}; // expected-error {{NSDictionary must be available to use Objective-C dictionary literals}}
 }
 
 @interface NSDate : NSObject

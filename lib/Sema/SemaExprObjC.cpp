@@ -746,20 +746,19 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
 }
 
 ObjCInterfaceDecl *Sema::getNSArrayDecl(SourceLocation Loc) {
+  // Look up the NSArray class, if we haven't done so already.
   if (_NSArrayDecl) {
     return _NSArrayDecl;
   }
-  // Look up the NSArray class, if we haven't done so already.
+
   IdentifierInfo *II = NSAPIObj->getNSClassId(NSAPI::ClassId_NSArray);
   NamedDecl *IF = LookupSingleName(TUScope, II, Loc, LookupOrdinaryName);
   _NSArrayDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
   if (!_NSArrayDecl && getLangOpts().DebuggerObjCLiteral) {
-    _NSArrayDecl =  ObjCInterfaceDecl::Create (Context,
-                                               Context.getTranslationUnitDecl(),
+    TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
+    _NSArrayDecl =  ObjCInterfaceDecl::Create (Context, TU,
                                                SourceLocation(),
-                                               II,
-                                               nullptr,
-                                               nullptr,
+                                               II, nullptr, nullptr,
                                                SourceLocation());
   }
 
@@ -873,28 +872,42 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
                                     ArrayWithObjectsMethod, SR));
 }
 
+ObjCInterfaceDecl *Sema::getNSDictionaryDecl(SourceLocation Loc) {
+  // Look up the NSDictionary class, if we haven't done so already.
+  if (_NSDictionaryDecl) {
+    return _NSDictionaryDecl;
+  }
+
+  IdentifierInfo *II = NSAPIObj->getNSClassId(NSAPI::ClassId_NSDictionary);
+  NamedDecl *IF = LookupSingleName(TUScope, II, Loc, LookupOrdinaryName);
+  _NSDictionaryDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+  if (!_NSDictionaryDecl && getLangOpts().DebuggerObjCLiteral) {
+    TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
+    _NSDictionaryDecl =  ObjCInterfaceDecl::Create (Context, TU,
+                                                    SourceLocation(),
+                                                    II, nullptr, nullptr,
+                                                    SourceLocation());
+  }
+
+  return _NSDictionaryDecl;
+}
+
 ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR, 
                                             ObjCDictionaryElement *Elements,
                                             unsigned NumElements) {
-  // Look up the NSDictionary class, if we haven't done so already.
+  SourceLocation Loc = SR.getBegin();
+  ObjCInterfaceDecl *NSDictionaryDecl = getNSDictionaryDecl(Loc);
   if (!NSDictionaryDecl) {
-    NamedDecl *IF = LookupSingleName(TUScope,
-                            NSAPIObj->getNSClassId(NSAPI::ClassId_NSDictionary),
-                            SR.getBegin(), LookupOrdinaryName);
-    NSDictionaryDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
-    if (!NSDictionaryDecl && getLangOpts().DebuggerObjCLiteral)
-      NSDictionaryDecl =  ObjCInterfaceDecl::Create (Context,
-                            Context.getTranslationUnitDecl(),
-                            SourceLocation(),
-                            NSAPIObj->getNSClassId(NSAPI::ClassId_NSDictionary),
-                            nullptr, nullptr, SourceLocation());
-
-    if (!NSDictionaryDecl) {
-      Diag(SR.getBegin(), diag::err_undeclared_nsdictionary);
-      return ExprError();    
-    }
+    Diag(SR.getBegin(), diag::err_undeclared_nsdictionary);
+    return ExprError();
+  } else if (!NSDictionaryDecl->hasDefinition() &&
+             !getLangOpts().DebuggerObjCLiteral) {
+    // NSDictionary should be defined if compiler not in a debugger mode
+    Diag(Loc, diag::err_undeclared_nsdictionary);
+    Diag(NSDictionaryDecl->getLocation(), diag::note_forward_class);
+    return ExprError();
   }
-  
+
   // Find the dictionaryWithObjects:forKeys:count: method, if we haven't done
   // so already.
   QualType IdT = Context.getObjCIdType();
