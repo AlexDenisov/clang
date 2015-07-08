@@ -745,38 +745,38 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                       setterMethod, RB);
 }
 
-ObjCInterfaceDecl *Sema::getNSArrayDecl(SourceLocation Loc) {
-  // Look up the NSArray class, if we haven't done so already.
-  if (_NSArrayDecl) {
-    return _NSArrayDecl;
-  }
-
-  IdentifierInfo *II = NSAPIObj->getNSClassId(NSAPI::ClassId_NSArray);
+ObjCInterfaceDecl *Sema::getObjCInterfaceDecl(SourceLocation Loc,
+                                              NSAPI::NSClassIdKindKind ClassId) {
+  ObjCInterfaceDecl *OID = nullptr;
+  IdentifierInfo *II = NSAPIObj->getNSClassId(ClassId);
   NamedDecl *IF = LookupSingleName(TUScope, II, Loc, LookupOrdinaryName);
-  _NSArrayDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
-  if (!_NSArrayDecl && getLangOpts().DebuggerObjCLiteral) {
+  OID = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+  if (!OID && getLangOpts().DebuggerObjCLiteral) {
     TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
-    _NSArrayDecl =  ObjCInterfaceDecl::Create (Context, TU,
+    OID =  ObjCInterfaceDecl::Create (Context, TU,
                                                SourceLocation(),
                                                II, nullptr, nullptr,
                                                SourceLocation());
   }
-
-  return _NSArrayDecl;
+  return OID;
 }
 
 ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
   SourceLocation Loc = SR.getBegin();
-  ObjCInterfaceDecl *NSArrayDecl = getNSArrayDecl(Loc);
+
   if (!NSArrayDecl) {
-    Diag(Loc, diag::err_undeclared_nsarray);
-    return ExprError();
-  } else if (!NSArrayDecl->hasDefinition() &&
-             !getLangOpts().DebuggerObjCLiteral) {
-    // NSArray should be defined if compiler not in a debugger mode
-    Diag(Loc, diag::err_undeclared_nsarray);
-    Diag(NSArrayDecl->getLocation(), diag::note_forward_class);
-    return ExprError();
+    NSArrayDecl = getObjCInterfaceDecl(Loc,
+                                       NSAPI::ClassId_NSArray);
+    if (!NSArrayDecl) {
+      Diag(Loc, diag::err_undeclared_nsarray);
+      return ExprError();
+    } else if (!NSArrayDecl->hasDefinition() &&
+               !getLangOpts().DebuggerObjCLiteral) {
+      // NSArray should be defined if compiler not in a debugger mode
+      Diag(Loc, diag::err_undeclared_nsarray);
+      Diag(NSArrayDecl->getLocation(), diag::note_forward_class);
+      return ExprError();
+    }
   }
 
   // Find the arrayWithObjects:count: method, if we haven't done so already.
@@ -872,40 +872,23 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
                                     ArrayWithObjectsMethod, SR));
 }
 
-ObjCInterfaceDecl *Sema::getNSDictionaryDecl(SourceLocation Loc) {
-  // Look up the NSDictionary class, if we haven't done so already.
-  if (_NSDictionaryDecl) {
-    return _NSDictionaryDecl;
-  }
-
-  IdentifierInfo *II = NSAPIObj->getNSClassId(NSAPI::ClassId_NSDictionary);
-  NamedDecl *IF = LookupSingleName(TUScope, II, Loc, LookupOrdinaryName);
-  _NSDictionaryDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
-  if (!_NSDictionaryDecl && getLangOpts().DebuggerObjCLiteral) {
-    TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
-    _NSDictionaryDecl =  ObjCInterfaceDecl::Create (Context, TU,
-                                                    SourceLocation(),
-                                                    II, nullptr, nullptr,
-                                                    SourceLocation());
-  }
-
-  return _NSDictionaryDecl;
-}
-
 ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR, 
                                             ObjCDictionaryElement *Elements,
                                             unsigned NumElements) {
   SourceLocation Loc = SR.getBegin();
-  ObjCInterfaceDecl *NSDictionaryDecl = getNSDictionaryDecl(Loc);
+
   if (!NSDictionaryDecl) {
-    Diag(SR.getBegin(), diag::err_undeclared_nsdictionary);
-    return ExprError();
-  } else if (!NSDictionaryDecl->hasDefinition() &&
-             !getLangOpts().DebuggerObjCLiteral) {
-    // NSDictionary should be defined if compiler not in a debugger mode
-    Diag(Loc, diag::err_undeclared_nsdictionary);
-    Diag(NSDictionaryDecl->getLocation(), diag::note_forward_class);
-    return ExprError();
+    NSDictionaryDecl = getObjCInterfaceDecl(Loc, NSAPI::ClassId_NSDictionary);
+    if (!NSDictionaryDecl) {
+      Diag(SR.getBegin(), diag::err_undeclared_nsdictionary);
+      return ExprError();
+    } else if (!NSDictionaryDecl->hasDefinition() &&
+               !getLangOpts().DebuggerObjCLiteral) {
+      // NSDictionary should be defined if compiler not in a debugger mode
+      Diag(Loc, diag::err_undeclared_nsdictionary);
+      Diag(NSDictionaryDecl->getLocation(), diag::note_forward_class);
+      return ExprError();
+    }
   }
 
   // Find the dictionaryWithObjects:forKeys:count: method, if we haven't done

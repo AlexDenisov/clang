@@ -727,9 +727,7 @@ public:
   ObjCMethodDecl *ValueWithBytesObjCTypeMethod;
 
   /// \brief The declaration of the Objective-C NSArray class.
-  ObjCInterfaceDecl *_NSArrayDecl;
-
-  ObjCInterfaceDecl *getNSArrayDecl(SourceLocation Loc);
+  ObjCInterfaceDecl *NSArrayDecl;
 
   /// \brief Pointer to NSMutableArray type (NSMutableArray *).
   QualType NSMutableArrayPointer;
@@ -738,9 +736,10 @@ public:
   ObjCMethodDecl *ArrayWithObjectsMethod;
 
   /// \brief The declaration of the Objective-C NSDictionary class.
-  ObjCInterfaceDecl *_NSDictionaryDecl;
+  ObjCInterfaceDecl *NSDictionaryDecl;
 
-  ObjCInterfaceDecl *getNSDictionaryDecl(SourceLocation Loc);
+  ObjCInterfaceDecl *getObjCInterfaceDecl(SourceLocation Loc,
+                                          NSAPI::NSClassIdKindKind ClassId);
 
   /// \brief Pointer to NSMutableDictionary type (NSMutableDictionary *).
   QualType NSMutableDictionaryPointer;

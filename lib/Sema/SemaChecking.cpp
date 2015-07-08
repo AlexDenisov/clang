@@ -6925,7 +6925,7 @@ static void checkObjCCollectionLiteralElement(Sema &S,
 /// target type.
 static void checkObjCArrayLiteral(Sema &S, QualType TargetType,
                                   ObjCArrayLiteral *ArrayLiteral) {
-  if (!S._NSArrayDecl)
+  if (!S.NSArrayDecl)
     return;
 
   const auto *TargetObjCPtr = TargetType->getAs<ObjCObjectPointerType>();
@@ -6934,7 +6934,7 @@ static void checkObjCArrayLiteral(Sema &S, QualType TargetType,
 
   if (TargetObjCPtr->isUnspecialized() ||
       TargetObjCPtr->getInterfaceDecl()->getCanonicalDecl()
-        != S._NSArrayDecl->getCanonicalDecl())
+        != S.NSArrayDecl->getCanonicalDecl())
     return;
 
   auto TypeArgs = TargetObjCPtr->getTypeArgs();
@@ -6954,7 +6954,7 @@ static void checkObjCArrayLiteral(Sema &S, QualType TargetType,
 static void checkObjCDictionaryLiteral(
               Sema &S, QualType TargetType,
               ObjCDictionaryLiteral *DictionaryLiteral) {
-  if (!S._NSDictionaryDecl)
+  if (!S.NSDictionaryDecl)
     return;
 
   const auto *TargetObjCPtr = TargetType->getAs<ObjCObjectPointerType>();
@@ -6963,7 +6963,7 @@ static void checkObjCDictionaryLiteral(
 
   if (TargetObjCPtr->isUnspecialized() ||
       TargetObjCPtr->getInterfaceDecl()->getCanonicalDecl()
-        != S._NSDictionaryDecl->getCanonicalDecl())
+        != S.NSDictionaryDecl->getCanonicalDecl())
     return;
 
   auto TypeArgs = TargetObjCPtr->getTypeArgs();
