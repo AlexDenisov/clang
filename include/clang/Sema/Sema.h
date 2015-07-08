@@ -727,7 +727,9 @@ public:
   ObjCMethodDecl *ValueWithBytesObjCTypeMethod;
 
   /// \brief The declaration of the Objective-C NSArray class.
-  ObjCInterfaceDecl *NSArrayDecl;
+  ObjCInterfaceDecl *_NSArrayDecl;
+
+  ObjCInterfaceDecl *getNSArrayDecl(SourceLocation Loc);
 
   /// \brief Pointer to NSMutableArray type (NSMutableArray *).
   QualType NSMutableArrayPointer;

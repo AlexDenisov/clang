@@ -745,27 +745,41 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                       setterMethod, RB);
 }
 
-ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
-  // Look up the NSArray class, if we haven't done so already.
-  if (!NSArrayDecl) {
-    NamedDecl *IF = LookupSingleName(TUScope,
-                                 NSAPIObj->getNSClassId(NSAPI::ClassId_NSArray),
-                                 SR.getBegin(),
-                                 LookupOrdinaryName);
-    NSArrayDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
-    if (!NSArrayDecl && getLangOpts().DebuggerObjCLiteral)
-      NSArrayDecl =  ObjCInterfaceDecl::Create (Context,
-                            Context.getTranslationUnitDecl(),
-                            SourceLocation(),
-                            NSAPIObj->getNSClassId(NSAPI::ClassId_NSArray),
-                            nullptr, nullptr, SourceLocation());
-
-    if (!NSArrayDecl) {
-      Diag(SR.getBegin(), diag::err_undeclared_nsarray);
-      return ExprError();
-    }
+ObjCInterfaceDecl *Sema::getNSArrayDecl(SourceLocation Loc) {
+  if (_NSArrayDecl) {
+    return _NSArrayDecl;
   }
-  
+  // Look up the NSArray class, if we haven't done so already.
+  IdentifierInfo *II = NSAPIObj->getNSClassId(NSAPI::ClassId_NSArray);
+  NamedDecl *IF = LookupSingleName(TUScope, II, Loc, LookupOrdinaryName);
+  _NSArrayDecl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+  if (!_NSArrayDecl && getLangOpts().DebuggerObjCLiteral) {
+    _NSArrayDecl =  ObjCInterfaceDecl::Create (Context,
+                                               Context.getTranslationUnitDecl(),
+                                               SourceLocation(),
+                                               II,
+                                               nullptr,
+                                               nullptr,
+                                               SourceLocation());
+  }
+
+  return _NSArrayDecl;
+}
+
+ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
+  SourceLocation Loc = SR.getBegin();
+  ObjCInterfaceDecl *NSArrayDecl = getNSArrayDecl(Loc);
+  if (!NSArrayDecl) {
+    Diag(Loc, diag::err_undeclared_nsarray);
+    return ExprError();
+  } else if (!NSArrayDecl->hasDefinition() &&
+             !getLangOpts().DebuggerObjCLiteral) {
+    // NSArray should be defined if compiler not in a debugger mode
+    Diag(Loc, diag::err_undeclared_nsarray);
+    Diag(NSArrayDecl->getLocation(), diag::note_forward_class);
+    return ExprError();
+  }
+
   // Find the arrayWithObjects:count: method, if we haven't done so already.
   QualType IdT = Context.getObjCIdType();
   if (!ArrayWithObjectsMethod) {
@@ -801,7 +815,7 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
       Method->setMethodParams(Context, Params, None);
     }
 
-    if (!validateBoxingMethod(*this, SR.getBegin(), NSArrayDecl, Sel, Method))
+    if (!validateBoxingMethod(*this, Loc, NSArrayDecl, Sel, Method))
       return ExprError();
 
     // Dig out the type that all elements should be converted to.
