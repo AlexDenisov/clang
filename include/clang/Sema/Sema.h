@@ -699,12 +699,6 @@ public:
   /// \brief Caches identifiers/selectors for NSFoundation APIs.
   std::unique_ptr<NSAPI> NSAPIObj;
 
-  /// \brief The declaration of the Objective-C NSNumber class.
-  ObjCInterfaceDecl *NSNumberDecl;
-
-  /// \brief The declaration of the Objective-C NSValue class.
-  ObjCInterfaceDecl *NSValueDecl;
-
   /// \brief Pointer to NSNumber type (NSNumber *).
   QualType NSNumberPointer;
 
@@ -714,8 +708,45 @@ public:
   /// \brief The Objective-C NSNumber methods used to create NSNumber literals.
   ObjCMethodDecl *NSNumberLiteralMethods[NSAPI::NumNSNumberLiteralMethods];
 
+  /// \brief Looks up declaration of the Objective-C class
+  /// specified by ClassKind
+  ObjCInterfaceDecl *getNSInterfaceDecl(NSAPI::NSClassIdKindKind ClassKind, 
+                                        SourceLocation Loc);
+
   /// \brief The declaration of the Objective-C NSString class.
-  ObjCInterfaceDecl *NSStringDecl;
+  ObjCInterfaceDecl *CachedNSStringDecl;
+
+  /// \brief Looks up declaration of the Objective-C NSString
+  /// looked up declaration stores at CachedNSStringDecl
+  ObjCInterfaceDecl *getNSStringDecl(SourceLocation Loc);
+
+  /// \brief The declaration of the Objective-C NSArray class.
+  ObjCInterfaceDecl *CachedNSArrayDecl;
+
+  /// \brief Looks up declaration of the Objective-C NSArray
+  /// looked up declaration stores at CachedNSArrayDecl
+  ObjCInterfaceDecl *getNSArrayDecl(SourceLocation Loc);
+
+  /// \brief The declaration of the Objective-C NSDictionary class.
+  ObjCInterfaceDecl *CachedNSDictionaryDecl;
+
+  /// \brief Looks up declaration of the Objective-C NSDictionary
+  /// looked up declaration stores at CachedNSDictionaryDecl
+  ObjCInterfaceDecl *getNSDictionaryDecl(SourceLocation Loc);
+
+  /// \brief The declaration of the Objective-C NSNumber class.
+  ObjCInterfaceDecl *CachedNSNumberDecl;
+
+  /// \brief Looks up declaration of the Objective-C NSNumber
+  /// looked up declaration stores at CachedNSNumberDecl
+  ObjCInterfaceDecl *getNSNumberDecl(SourceLocation Loc);
+
+  /// \brief The declaration of the Objective-C NSValue class.
+  ObjCInterfaceDecl *CachedNSValueDecl;
+
+  /// \brief Looks up declaration of the Objective-C NSValue
+  /// looked up declaration stores at CachedNSValueDecl
+  ObjCInterfaceDecl *getNSValueDecl(SourceLocation Loc);
 
   /// \brief Pointer to NSString type (NSString *).
   QualType NSStringPointer;
@@ -726,17 +757,13 @@ public:
   /// \brief The declaration of the valueWithBytes:objCType: method.
   ObjCMethodDecl *ValueWithBytesObjCTypeMethod;
 
-  /// \brief The declaration of the Objective-C NSArray class.
-  ObjCInterfaceDecl *NSArrayDecl;
-
   /// \brief Pointer to NSMutableArray type (NSMutableArray *).
   QualType NSMutableArrayPointer;
 
   /// \brief The declaration of the arrayWithObjects:count: method.
-  ObjCMethodDecl *ArrayWithObjectsMethod;
-
-  /// \brief The declaration of the Objective-C NSDictionary class.
-  ObjCInterfaceDecl *NSDictionaryDecl;
+  ObjCMethodDecl *_ArrayWithObjectsMethod;
+  
+  ObjCMethodDecl *getArrayWithObjectsMethod(SourceLocation Loc);
 
   /// \brief Pointer to NSMutableDictionary type (NSMutableDictionary *).
   QualType NSMutableDictionaryPointer;
@@ -751,7 +778,9 @@ public:
   QualType NSMutableOrderedSetPointer;
 
   /// \brief The declaration of the dictionaryWithObjects:forKeys:count: method.
-  ObjCMethodDecl *DictionaryWithObjectsMethod;
+  ObjCMethodDecl *_DictionaryWithObjectsMethod;
+  
+  ObjCMethodDecl *getDictionaryWithObjectsMethod(SourceLocation Loc);
 
   /// \brief id<NSCopying> type.
   QualType QIDNSCopying;
