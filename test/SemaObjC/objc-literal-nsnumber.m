@@ -17,7 +17,7 @@ void checkNSNumberUnavailableDiagnostic() {
                   // expected-error {{illegal type 'int' used in a boxed expression}}
 }
 
-@class NSNumber;
+@class NSNumber; // expected-note {{forward declaration of class here}}
 
 void checkNSNumberFDDiagnostic() {
   id num = @1000; // expected-error {{NSNumber must be available to use Objective-C literals}}

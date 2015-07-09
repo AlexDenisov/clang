@@ -738,9 +738,6 @@ public:
   /// \brief The declaration of the Objective-C NSDictionary class.
   ObjCInterfaceDecl *NSDictionaryDecl;
 
-  ObjCInterfaceDecl *getObjCInterfaceDecl(SourceLocation Loc,
-                                          NSAPI::NSClassIdKindKind ClassId);
-
   /// \brief Pointer to NSMutableDictionary type (NSMutableDictionary *).
   QualType NSMutableDictionaryPointer;
 
