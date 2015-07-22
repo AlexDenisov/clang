@@ -11,14 +11,14 @@ typedef unsigned int NSUInteger;
 
 void checkNSArrayUnavailableDiagnostic() {
   id obj;
-  id arr = @[obj]; // expected-error {{NSArray must be available to use Objective-C array literals}}
+  id arr = @[obj]; // expected-error {{definition of class NSArray must be available to use Objective-C array literals}}
 }
 
 @class NSArray; // expected-note {{forward declaration of class here}}
 
 void checkNSArrayFDDiagnostic() {
   id obj;
-  id arr = @[obj]; // expected-error {{NSArray must be available to use Objective-C array literals}}
+  id arr = @[obj]; // expected-error {{definition of class NSArray must be available to use Objective-C array literals}}
 }
 
 @class NSString;
