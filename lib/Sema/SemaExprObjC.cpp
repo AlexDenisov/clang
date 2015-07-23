@@ -168,44 +168,44 @@ static bool validateBoxingMethod(Sema &S, SourceLocation Loc,
   return true;
 }
 
-/// \brief Maps NSClassIdKindKind to ObjCLiteralKind
-static Sema::ObjCLiteralKind LiteralKindFromClassKind(
-                                          NSAPI::NSClassIdKindKind ClassKind) {
-  switch (ClassKind) {
-    case NSAPI::ClassId_NSArray:
-      return Sema::LK_Array;
-    case NSAPI::ClassId_NSDictionary:
-      return Sema::LK_Dictionary;
-    case NSAPI::ClassId_NSNumber:
-      return Sema::LK_Numeric;
-    case NSAPI::ClassId_NSString:
-      return Sema::LK_String;
-    case NSAPI::ClassId_NSValue:
-      return Sema::LK_Boxed;
+/// \brief Maps ObjCLiteralKind to NSClassIdKindKind
+static NSAPI::NSClassIdKindKind ClassKindFromLiteralKind(
+                                            Sema::ObjCLiteralKind LiteralKind) {
+  switch (LiteralKind) {
+    case Sema::LK_Array:
+      return NSAPI::ClassId_NSArray;
+    case Sema::LK_Dictionary:
+      return NSAPI::ClassId_NSDictionary;
+    case Sema::LK_Numeric:
+      return NSAPI::ClassId_NSNumber;
+    case Sema::LK_String:
+      return NSAPI::ClassId_NSString;
+    case Sema::LK_Boxed:
+      return NSAPI::ClassId_NSValue;
 
-    default:
-      return Sema::LK_None;
+    // there is no corresponding matching
+    // between LK_None/LK_Block and NSClassIdKindKind
+    case Sema::LK_Block:
+    case Sema::LK_None:
+      llvm_unreachable("LiteralKind can't be converted into a ClassKind");
   }
-
-  llvm_unreachable("ClassKind can't be converted into a LiteralKind");
 }
 
 /// \brief Validates ObjCInterfaceDecl availability.
 /// ObjCInterfaceDecl, used to create ObjC literals, should be defined
 /// if clang not in a debugger mode.
 static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
-                                             SourceLocation Loc,
-                                             NSAPI::NSClassIdKindKind ClassKind) {
+                                            SourceLocation Loc,
+                                            Sema::ObjCLiteralKind LiteralKind) {
   if (!Decl) {
-    Sema::ObjCLiteralKind Kind = LiteralKindFromClassKind(ClassKind);
-    IdentifierInfo *II = S.NSAPIObj->getNSClassId(ClassKind);
+    NSAPI::NSClassIdKindKind Kind = ClassKindFromLiteralKind(LiteralKind);
+    IdentifierInfo *II = S.NSAPIObj->getNSClassId(Kind);
     S.Diag(Loc, diag::err_undeclared_objc_literal_class)
-      << II->getName() << Kind;
+      << II->getName() << LiteralKind;
     return false;
   } else if (!Decl->hasDefinition() && !S.getLangOpts().DebuggerObjCLiteral) {
-    Sema::ObjCLiteralKind Kind = LiteralKindFromClassKind(ClassKind);
     S.Diag(Loc, diag::err_undeclared_objc_literal_class)
-      << Decl->getName() << Kind;
+      << Decl->getName() << LiteralKind;
     S.Diag(Decl->getLocation(), diag::note_forward_class);
     return false;
   }
@@ -219,23 +219,18 @@ static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
 static ObjCInterfaceDecl *LookupObjCLiteralInterfaceDecl(Sema &S,
                                            SourceLocation Loc,
                                            NSAPI::NSClassIdKindKind ClassKind) {
-  ObjCInterfaceDecl *Decl = nullptr;
   IdentifierInfo *II = S.NSAPIObj->getNSClassId(ClassKind);
   NamedDecl *IF = S.LookupSingleName(S.TUScope, II, Loc,
                                      Sema::LookupOrdinaryName);
-  Decl = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
-  if (!Decl && S.getLangOpts().DebuggerObjCLiteral) {
+  ObjCInterfaceDecl *ID = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+  if (!ID && S.getLangOpts().DebuggerObjCLiteral) {
     ASTContext &Context = S.Context;
     TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
-    Decl = ObjCInterfaceDecl::Create (Context, TU, SourceLocation(), II,
-                                      nullptr, nullptr, SourceLocation());
+    ID = ObjCInterfaceDecl::Create (Context, TU, SourceLocation(), II,
+                                    nullptr, nullptr, SourceLocation());
   }
 
-  if (!ValidateObjCLiteralInterfaceDecl(S, Decl, Loc, ClassKind)) {
-    Decl = nullptr;
-  }
-
-  return Decl;
+  return ID;
 }
 
 /// \brief Retrieve the NSNumber factory method that should be used to create
@@ -269,7 +264,8 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
   if (!S.NSNumberDecl) {
     S.NSNumberDecl = LookupObjCLiteralInterfaceDecl(S, Loc,
                                                     NSAPI::ClassId_NSNumber);
-    if (!S.NSNumberDecl) {
+    if (!ValidateObjCLiteralInterfaceDecl(S, S.NSNumberDecl,
+                                          Loc, Sema::LK_Numeric)) {
       return nullptr;
     }
   }
@@ -520,10 +516,10 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       if (!NSStringDecl) {
         NSStringDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
                                                       NSAPI::ClassId_NSString);
-        if (!NSStringDecl) {
+        if (!ValidateObjCLiteralInterfaceDecl(*this, NSStringDecl,
+                                              Loc, Sema::LK_String)) {
           return ExprError();
         }
-        assert(NSStringDecl && "NSStringDecl should not be NULL");
         QualType NSStringObject = Context.getObjCInterfaceType(NSStringDecl);
         NSStringPointer = Context.getObjCObjectPointerType(NSStringObject);
       }
@@ -621,7 +617,8 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     if (!NSValueDecl) {
       NSValueDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
                                                    NSAPI::ClassId_NSValue);
-      if (!NSValueDecl) {
+      if (!ValidateObjCLiteralInterfaceDecl(*this, NSValueDecl,
+                                            Loc, Sema::LK_Boxed)) {
         return ExprError();
       }
 
@@ -770,7 +767,8 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
   if (!NSArrayDecl) {
     NSArrayDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
                                                  NSAPI::ClassId_NSArray);
-    if (!NSArrayDecl) {
+    if (!ValidateObjCLiteralInterfaceDecl(*this, NSArrayDecl,
+                                          Loc, Sema::LK_Array)) {
       return ExprError();
     }
   }
@@ -876,7 +874,8 @@ ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
   if (!NSDictionaryDecl) {
     NSDictionaryDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
                                                    NSAPI::ClassId_NSDictionary);
-    if (!NSDictionaryDecl) {
+    if (!ValidateObjCLiteralInterfaceDecl(*this, NSDictionaryDecl,
+                                          Loc, Sema::LK_Dictionary)) {
       return ExprError();
     }
   }
