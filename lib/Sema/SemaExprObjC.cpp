@@ -216,9 +216,10 @@ static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
 /// \brief Looks up ObjCInterfaceDecl of a given NSClassIdKindKind.
 /// Used to create ObjC literals, such as NSDictionary (@{}),
 /// NSArray (@[]) and Boxed Expressions (@())
-static ObjCInterfaceDecl *LookupObjCLiteralInterfaceDecl(Sema &S,
-                                           SourceLocation Loc,
-                                           NSAPI::NSClassIdKindKind ClassKind) {
+static ObjCInterfaceDecl *LookupObjCInterfaceDeclForLiteral(Sema &S,
+                                            SourceLocation Loc,
+                                            Sema::ObjCLiteralKind LiteralKind) {
+  NSAPI::NSClassIdKindKind ClassKind = ClassKindFromLiteralKind(LiteralKind);
   IdentifierInfo *II = S.NSAPIObj->getNSClassId(ClassKind);
   NamedDecl *IF = S.LookupSingleName(S.TUScope, II, Loc,
                                      Sema::LookupOrdinaryName);
@@ -228,6 +229,10 @@ static ObjCInterfaceDecl *LookupObjCLiteralInterfaceDecl(Sema &S,
     TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
     ID = ObjCInterfaceDecl::Create (Context, TU, SourceLocation(), II,
                                     nullptr, nullptr, SourceLocation());
+  }
+
+  if (!ValidateObjCLiteralInterfaceDecl(S, ID, Loc, LiteralKind)) {
+    ID = nullptr;
   }
 
   return ID;
@@ -262,10 +267,9 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
   // Look up the NSNumber class, if we haven't done so already. It's cached
   // in the Sema instance.
   if (!S.NSNumberDecl) {
-    S.NSNumberDecl = LookupObjCLiteralInterfaceDecl(S, Loc,
-                                                    NSAPI::ClassId_NSNumber);
-    if (!ValidateObjCLiteralInterfaceDecl(S, S.NSNumberDecl,
-                                          Loc, Sema::LK_Numeric)) {
+    S.NSNumberDecl = LookupObjCInterfaceDeclForLiteral(S, Loc,
+                                                       Sema::LK_Numeric);
+    if (!S.NSNumberDecl) {
       return nullptr;
     }
   }
@@ -514,10 +518,9 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     if (Context.hasSameUnqualifiedType(PointeeType, Context.CharTy)) {
 
       if (!NSStringDecl) {
-        NSStringDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
-                                                      NSAPI::ClassId_NSString);
-        if (!ValidateObjCLiteralInterfaceDecl(*this, NSStringDecl,
-                                              Loc, Sema::LK_String)) {
+        NSStringDecl = LookupObjCInterfaceDeclForLiteral(*this, Loc,
+                                                         Sema::LK_String);
+        if (!NSStringDecl) {
           return ExprError();
         }
         QualType NSStringObject = Context.getObjCInterfaceType(NSStringDecl);
@@ -615,10 +618,9 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     // Look up the NSValue class, if we haven't done so already. It's cached
     // in the Sema instance.
     if (!NSValueDecl) {
-      NSValueDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
-                                                   NSAPI::ClassId_NSValue);
-      if (!ValidateObjCLiteralInterfaceDecl(*this, NSValueDecl,
-                                            Loc, Sema::LK_Boxed)) {
+      NSValueDecl = LookupObjCInterfaceDeclForLiteral(*this, Loc,
+                                                      Sema::LK_Boxed);
+      if (!NSValueDecl) {
         return ExprError();
       }
 
@@ -765,10 +767,9 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
   SourceLocation Loc = SR.getBegin();
 
   if (!NSArrayDecl) {
-    NSArrayDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
-                                                 NSAPI::ClassId_NSArray);
-    if (!ValidateObjCLiteralInterfaceDecl(*this, NSArrayDecl,
-                                          Loc, Sema::LK_Array)) {
+    NSArrayDecl = LookupObjCInterfaceDeclForLiteral(*this, Loc,
+                                                    Sema::LK_Array);
+    if (!NSArrayDecl) {
       return ExprError();
     }
   }
@@ -872,10 +873,9 @@ ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
   SourceLocation Loc = SR.getBegin();
 
   if (!NSDictionaryDecl) {
-    NSDictionaryDecl = LookupObjCLiteralInterfaceDecl(*this, Loc,
-                                                   NSAPI::ClassId_NSDictionary);
-    if (!ValidateObjCLiteralInterfaceDecl(*this, NSDictionaryDecl,
-                                          Loc, Sema::LK_Dictionary)) {
+    NSDictionaryDecl = LookupObjCInterfaceDeclForLiteral(*this, Loc,
+                                                         Sema::LK_Dictionary);
+    if (!NSDictionaryDecl) {
       return ExprError();
     }
   }
