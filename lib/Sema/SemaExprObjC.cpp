@@ -187,7 +187,7 @@ static Sema::ObjCLiteralKind LiteralKindFromClassKind(
       return Sema::LK_None;
   }
 
-  llvm_unreachable("ClassKind cant be converted into a LiteralKind");
+  llvm_unreachable("ClassKind can't be converted into a LiteralKind");
 }
 
 /// \brief Validates ObjCInterfaceDecl availability.
@@ -200,12 +200,12 @@ static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
     Sema::ObjCLiteralKind Kind = LiteralKindFromClassKind(ClassKind);
     IdentifierInfo *II = S.NSAPIObj->getNSClassId(ClassKind);
     S.Diag(Loc, diag::err_undeclared_objc_literal_class)
-    << II->getName() << Kind;
+      << II->getName() << Kind;
     return false;
   } else if (!Decl->hasDefinition() && !S.getLangOpts().DebuggerObjCLiteral) {
     Sema::ObjCLiteralKind Kind = LiteralKindFromClassKind(ClassKind);
     S.Diag(Loc, diag::err_undeclared_objc_literal_class)
-    << Decl->getName() << Kind;
+      << Decl->getName() << Kind;
     S.Diag(Decl->getLocation(), diag::note_forward_class);
     return false;
   }
@@ -691,8 +691,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     }
     
     if (!ValueType.isTriviallyCopyableType(Context)) {
-      Diag(Loc,
-           diag::err_objc_non_trivially_copyable_boxed_expression_type)
+      Diag(Loc, diag::err_objc_non_trivially_copyable_boxed_expression_type)
         << ValueType << ValueExpr->getSourceRange();
       return ExprError();
     }
