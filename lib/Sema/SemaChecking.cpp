@@ -8907,6 +8907,11 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
     return;
   }
 
+  // do not check for circular container when message sends to a `super`
+  if (Message->getReceiverKind() == ObjCMessageExpr::SuperInstance) {
+    return;
+  }
+
   Optional<int> ArgOpt;
 
   if (!(ArgOpt = GetNSMutableArrayArgumentIndex(*this, Message)) &&

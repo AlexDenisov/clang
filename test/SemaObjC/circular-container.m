@@ -144,3 +144,12 @@ void checkNSMutableOrderedSet() {
   [s replaceObjectAtIndex:0 withObject:s]; // expected-warning {{adding 's' to 's' might cause circular dependency in container}}
 }
 
+@interface Test1 : NSCountedSet
+@end
+
+@implementation Test1
+- (void)meth {
+  [super addObject:nil]; // no-warning
+}
+@end
+
