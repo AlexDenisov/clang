@@ -8917,38 +8917,49 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
 
   int ArgIndex = *ArgOpt;
 
-  Expr *Receiver = Message->getInstanceReceiver()->IgnoreImpCasts();
-  if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Receiver)) {
-    Receiver = OE->getSourceExpr()->IgnoreImpCasts();
-  }
-
   Expr *Arg = Message->getArg(ArgIndex)->IgnoreImpCasts();
   if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Arg)) {
     Arg = OE->getSourceExpr()->IgnoreImpCasts();
   }
 
-  if (DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver)) {
+  if (Message->getReceiverKind() == ObjCMessageExpr::SuperInstance) {
     if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
-      if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
-        ValueDecl *Decl = ReceiverRE->getDecl();
+      if (ArgRE->isObjCSelfExpr()) {
         Diag(Message->getSourceRange().getBegin(),
              diag::warn_objc_circular_container)
-          << Decl->getName();
-        Diag(Decl->getLocation(),
-             diag::note_objc_circular_container_declared_here)
-          << Decl->getName();
+          << ArgRE->getDecl()->getName() << StringRef("super");
       }
     }
-  } else if (ObjCIvarRefExpr *IvarRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
-    if (ObjCIvarRefExpr *IvarArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
-      if (IvarRE->getDecl() == IvarArgRE->getDecl()) {
-        ObjCIvarDecl *Decl = IvarRE->getDecl();
-        Diag(Message->getSourceRange().getBegin(),
-             diag::warn_objc_circular_container)
-          << Decl->getName();
-        Diag(Decl->getLocation(),
-             diag::note_objc_circular_container_declared_here)
-          << Decl->getName();
+  } else {
+    Expr *Receiver = Message->getInstanceReceiver()->IgnoreImpCasts();
+
+    if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Receiver)) {
+      Receiver = OE->getSourceExpr()->IgnoreImpCasts();
+    }
+
+    if (DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver)) {
+      if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
+        if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+          ValueDecl *Decl = ReceiverRE->getDecl();
+          Diag(Message->getSourceRange().getBegin(),
+               diag::warn_objc_circular_container)
+            << Decl->getName() << Decl->getName();
+          Diag(Decl->getLocation(),
+               diag::note_objc_circular_container_declared_here)
+            << Decl->getName();
+        }
+      }
+    } else if (ObjCIvarRefExpr *IvarRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
+      if (ObjCIvarRefExpr *IvarArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
+        if (IvarRE->getDecl() == IvarArgRE->getDecl()) {
+          ObjCIvarDecl *Decl = IvarRE->getDecl();
+          Diag(Message->getSourceRange().getBegin(),
+               diag::warn_objc_circular_container)
+            << Decl->getName() << Decl->getName();
+          Diag(Decl->getLocation(),
+               diag::note_objc_circular_container_declared_here)
+            << Decl->getName();
+        }
       }
     }
   }
