@@ -8743,7 +8743,22 @@ static Optional<int> GetNSMutableArrayArgumentIndex(Sema &S,
       S.Context.getObjCObjectPointerType(NSMutableArrayObject);
   }
 
-  if (S.NSMutableArrayPointer != Message->getReceiverType()) {
+  bool IsMutableArray = false;
+
+  ObjCInterfaceDecl *Receiver = Message->getReceiverInterface();
+  do {
+    QualType QT = S.Context.getObjCInterfaceType(Receiver);
+    QualType ReceiverType = S.Context.getObjCObjectPointerType(QT);
+
+    IsMutableArray = !S.NSMutableArrayPointer.isNull() &&
+      ReceiverType == S.NSMutableArrayPointer;
+
+    if (IsMutableArray) {
+      break;
+    }
+  } while ((Receiver = Receiver->getSuperClass()));
+
+  if (!IsMutableArray) {
     return None;
   }
 
@@ -8792,7 +8807,22 @@ Optional<int> GetNSMutableDictionaryArgumentIndex(Sema &S,
       S.Context.getObjCObjectPointerType(NSMutableDictionaryObject);
   }
 
-  if (S.NSMutableDictionaryPointer != Message->getReceiverType()) {
+  bool IsMutableDictionary = false;
+
+  ObjCInterfaceDecl *Receiver = Message->getReceiverInterface();
+  do {
+    QualType QT = S.Context.getObjCInterfaceType(Receiver);
+    QualType ReceiverType = S.Context.getObjCObjectPointerType(QT);
+
+    IsMutableDictionary = !S.NSMutableDictionaryPointer.isNull() &&
+      ReceiverType == S.NSMutableDictionaryPointer;
+
+    if (IsMutableDictionary) {
+      break;
+    }
+  } while ((Receiver = Receiver->getSuperClass()));
+
+  if (!IsMutableDictionary) {
     return None;
   }
 
@@ -8867,14 +8897,26 @@ static Optional<int> GetNSSetArgumentIndex(Sema &S, ObjCMessageExpr *Message) {
     }
   }
 
-  QualType ReceiverType = Message->getReceiverType();
+  bool IsMutableSet = false;
+  bool IsMutableOrderedSet = false;
+  bool IsCountedSet = false;
 
-  bool IsMutableSet = !S.NSMutableSetPointer.isNull() &&
-    ReceiverType == S.NSMutableSetPointer;
-  bool IsMutableOrderedSet = !S.NSMutableOrderedSetPointer.isNull() &&
-    ReceiverType == S.NSMutableOrderedSetPointer;
-  bool IsCountedSet = !S.NSCountedSetPointer.isNull() &&
-    ReceiverType == S.NSCountedSetPointer;
+  ObjCInterfaceDecl *Receiver = Message->getReceiverInterface();
+  do {
+    QualType QT = S.Context.getObjCInterfaceType(Receiver);
+    QualType ReceiverType = S.Context.getObjCObjectPointerType(QT);
+
+    IsMutableSet = !S.NSMutableSetPointer.isNull() &&
+      ReceiverType == S.NSMutableSetPointer;
+    IsMutableOrderedSet = !S.NSMutableOrderedSetPointer.isNull() &&
+      ReceiverType == S.NSMutableOrderedSetPointer;
+    IsCountedSet = !S.NSCountedSetPointer.isNull() &&
+      ReceiverType == S.NSCountedSetPointer;
+
+    if (IsMutableSet || IsMutableOrderedSet || IsCountedSet) {
+      break;
+    }
+  } while ((Receiver = Receiver->getSuperClass()));
 
   if (!IsMutableSet && !IsMutableOrderedSet && !IsCountedSet) {
     return None;
@@ -8944,9 +8986,11 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
           Diag(Message->getSourceRange().getBegin(),
                diag::warn_objc_circular_container)
             << Decl->getName() << Decl->getName();
-          Diag(Decl->getLocation(),
-               diag::note_objc_circular_container_declared_here)
-            << Decl->getName();
+          if (!ArgRE->isObjCSelfExpr()) {
+            Diag(Decl->getLocation(),
+                 diag::note_objc_circular_container_declared_here)
+              << Decl->getName();
+          }
         }
       }
     } else if (ObjCIvarRefExpr *IvarRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
