@@ -207,6 +207,34 @@ public:
   Optional<NSNumberLiteralMethodKind>
       getNSNumberFactoryMethodKind(QualType T) const;
 
+  /// \brief Enumerates the NSValue methods used to generate literals.
+  enum NSValueMethodKind {
+    NSValueWithBytesObjCType,
+
+    NSValueWithCGPoint,
+    NSValueWithCGVector,
+    NSValueWithCGSize,
+    NSValueWithCGRect,
+    NSValueWithCGAffineTransform,
+
+    NSValueWithUIEdgeInsets,
+    NSValueWithUIOffset,
+
+    NSValueWithCATransform3D,
+
+    NSValueWithRange,
+    NSValueWithPoint,
+    NSValueWithSize,
+    NSValueWithRect,
+    NSValueWithEdgeInsets
+  };
+
+  static const unsigned NumNSValueMethods = 14;
+
+  /// \brief The Objective-C NSValue selectors used to create NSValue literals
+  /// and to apply automatic migration
+  Selector getNSValueSelector(NSValueMethodKind MK) const;
+
   /// \brief Returns true if \param T is a typedef of "BOOL" in objective-c.
   bool isObjCBOOLType(QualType T) const;
   /// \brief Returns true if \param T is a typedef of "NSInteger" in objective-c.
@@ -248,6 +276,10 @@ private:
   /// \brief The Objective-C NSNumber selectors used to create NSNumber literals.
   mutable Selector NSNumberClassSelectors[NumNSNumberLiteralMethods];
   mutable Selector NSNumberInstanceSelectors[NumNSNumberLiteralMethods];
+
+  /// \brief The Objective-C NSValue selectors used to create NSValue literals
+  /// and to apply automatic migration
+  mutable Selector NSValueSelectors[NumNSValueMethods];
 
   mutable Selector objectForKeyedSubscriptSel, objectAtIndexedSubscriptSel,
                    setObjectForKeyedSubscriptSel,setObjectAtIndexedSubscriptSel,

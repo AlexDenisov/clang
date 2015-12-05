@@ -335,6 +335,8 @@ static bool rewriteToNumericBoxedExpression(const ObjCMessageExpr *Msg,
                                             const NSAPI &NS, Commit &commit);
 static bool rewriteToStringBoxedExpression(const ObjCMessageExpr *Msg,
                                            const NSAPI &NS, Commit &commit);
+static bool rewriteToObjCBoxableExpression(const ObjCMessageExpr *Msg,
+                                           const NSAPI &NS, Commit &commit);
 
 bool edit::rewriteToObjCLiteralSyntax(const ObjCMessageExpr *Msg,
                                       const NSAPI &NS, Commit &commit,
@@ -351,6 +353,8 @@ bool edit::rewriteToObjCLiteralSyntax(const ObjCMessageExpr *Msg,
     return rewriteToNumberLiteral(Msg, NS, commit);
   if (II == NS.getNSClassId(NSAPI::ClassId_NSString))
     return rewriteToStringBoxedExpression(Msg, NS, commit);
+  if (II == NS.getNSClassId(NSAPI::ClassId_NSValue))
+    return rewriteToObjCBoxableExpression(Msg, NS, commit);
 
   return false;
 }
@@ -1167,6 +1171,63 @@ static bool rewriteToStringBoxedExpression(const ObjCMessageExpr *Msg,
     if (NS.isNSUTF8StringEncodingConstant(encodingArg) ||
         NS.isNSASCIIStringEncodingConstant(encodingArg))
       return doRewriteToUTF8StringBoxedExpressionHelper(Msg, NS, commit);
+  }
+
+  return false;
+}
+
+static bool rewriteToObjCBoxableExpression(const ObjCMessageExpr *Msg,
+                                           const NSAPI &NS, Commit &commit) {
+  int NumArgs = Msg->getNumArgs();
+  if (NumArgs != 2 && NumArgs != 1) {
+    return false;
+  }
+
+  Selector Sel = Msg->getSelector();
+
+  if (Sel == NS.getNSValueSelector(NSAPI::NSValueWithBytesObjCType) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithCATransform3D) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithCGAffineTransform) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithCGPoint) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithCGRect) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithCGSize) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithCGVector) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithEdgeInsets) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithPoint) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithRange) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithRect) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithSize) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithUIEdgeInsets) ||
+      Sel == NS.getNSValueSelector(NSAPI::NSValueWithUIOffset)) {
+
+    const Expr *Arg = Msg->getArg(0)->IgnoreCasts();
+
+    // handles 'valueWithBytes' specific case
+    // [NSValue valueWithBytes:&unaryOperation objCType:@encode(SomeType)]
+    //                         ^
+    if (const UnaryOperator *UO = dyn_cast<UnaryOperator>(Arg)) {
+      Arg = UO->getSubExpr();
+    }
+
+    QualType ArgType = Arg->getType();
+
+    // handles 'valueWithBytes' specific case
+    // [NSValue valueWithBytes:&unaryOperation objCType:@encode(SomeType)]
+    //                         ^-------------^
+    if (ArgType->isPointerType()) {
+      ArgType = ArgType->getPointeeType();
+    }
+
+    if (!ArgType->isObjCBoxableRecordType()) {
+      return false;
+    }
+
+    SourceRange MsgRange(Msg->getLocStart(), Msg->getLocEnd());
+    SourceRange ArgRange(Arg->getLocStart(), Arg->getLocEnd());
+    commit.replaceWithInner(MsgRange, ArgRange);
+    commit.insertWrap("@(", ArgRange, ")");
+
+    return true;
   }
 
   return false;

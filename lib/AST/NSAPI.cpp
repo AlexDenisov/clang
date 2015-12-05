@@ -478,6 +478,76 @@ NSAPI::getNSNumberFactoryMethodKind(QualType T) const {
   return None;
 }
 
+Selector NSAPI::getNSValueSelector(NSValueMethodKind MK) const {
+  if (NSValueSelectors[MK].isNull()) {
+    Selector Sel;
+    switch (MK) {
+      case NSValueWithBytesObjCType: {
+        IdentifierInfo *KeyIdents[] = {
+          &Ctx.Idents.get("valueWithBytes"),
+          &Ctx.Idents.get("objCType")
+        };
+        Sel = Ctx.Selectors.getSelector(2, KeyIdents);
+      } break;
+      case NSValueWithCGPoint:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                          &Ctx.Idents.get("valueWithCGPoint"));
+        break;
+      case NSValueWithCGVector:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                          &Ctx.Idents.get("valueWithCGVector"));
+        break;
+      case NSValueWithCGSize:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                            &Ctx.Idents.get("valueWithCGSize"));
+        break;
+      case NSValueWithCGRect:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                            &Ctx.Idents.get("valueWithCGRect"));
+        break;
+      case NSValueWithCGAffineTransform:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                &Ctx.Idents.get("valueWithCGAffineTransform"));
+        break;
+      case NSValueWithUIEdgeInsets:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                      &Ctx.Idents.get("valueWithUIEdgeInsets"));
+        break;
+      case NSValueWithUIOffset:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                         &Ctx.Idents.get("valueWithUIOffset"));
+        break;
+      case NSValueWithCATransform3D:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                     &Ctx.Idents.get("valueWithCATransform3D"));
+        break;
+      case NSValueWithRange:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                             &Ctx.Idents.get("valueWithRange"));
+        break;
+      case NSValueWithPoint:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                             &Ctx.Idents.get("valueWithPoint"));
+        break;
+      case NSValueWithSize:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                             &Ctx.Idents.get("valueWithSize"));
+        break;
+      case NSValueWithRect:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                             &Ctx.Idents.get("valueWithRect"));
+        break;
+      case NSValueWithEdgeInsets:
+        Sel = Ctx.Selectors.getUnarySelector(
+                                       &Ctx.Idents.get("valueWithEdgeInsets"));
+        break;
+    }
+    NSValueSelectors[MK] = Sel;
+  }
+
+  return NSValueSelectors[MK];
+}
+
 /// \brief Returns true if \param T is a typedef of "BOOL" in objective-c.
 bool NSAPI::isObjCBOOLType(QualType T) const {
   return isObjCTypedef(T, "BOOL", BOOLId);

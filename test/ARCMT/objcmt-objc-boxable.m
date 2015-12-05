@@ -1,7 +1,7 @@
 // RUN: rm -rf %t
 // RUN: %clang_cc1 -fobjc-arc -objcmt-migrate-literals -mt-migrate-directory %t %s -x objective-c
 // RUN: c-arcmt-test -mt-migrate-directory %t | arcmt-test -verify-transformed-files %s.result
-// R_UN: %clang_cc1 -triple x86_64-apple-darwin10 -fsyntax-only -x objective-c %s.result
+// RUN: %clang_cc1 -triple x86_64-apple-darwin10 -fsyntax-only -x objective-c %s.result
 
 typedef unsigned long NSUInteger;
 typedef double CGFloat;

@@ -1,5 +1,5 @@
 // RUN: rm -rf %t
-// RUN: %clang_cc1 -fobjc-arc -objcmt-migrate-literals -mt-migrate-directory %t %s -x objective-c -verify
+// RUN: %clang_cc1 -fobjc-arc -objcmt-migrate-literals -mt-migrate-directory %t %s -x objective-c
 // RUN: c-arcmt-test -mt-migrate-directory %t | arcmt-test -verify-transformed-files %s.result
 // RUN: %clang_cc1 -triple x86_64-apple-darwin10 -fsyntax-only -x objective-c %s.result
 
@@ -159,7 +159,7 @@ void boxableStructsAvailable() {
   @(ui_offset);
 
   @(ns_range);
-  @(ca_ransform3D);
+  @(ca_transform3D);
 
   @(ns_point);
   @(ns_size);
@@ -169,5 +169,4 @@ void boxableStructsAvailable() {
   @(customStruct);
   [NSValue valueWithBytes:&anotherCustomStruct objCType:@encode(AnotherCustomStruct)];
 }
-
 
