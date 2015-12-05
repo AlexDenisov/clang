@@ -207,7 +207,8 @@ public:
   Optional<NSNumberLiteralMethodKind>
       getNSNumberFactoryMethodKind(QualType T) const;
 
-  /// \brief Enumerates the NSValue methods used to generate literals.
+  /// \brief Enumerates the NSValue methods used to generate literals
+  /// and to apply automatic migration
   enum NSValueMethodKind {
     NSValueWithBytesObjCType,
 

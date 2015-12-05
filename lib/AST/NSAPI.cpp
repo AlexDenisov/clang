@@ -522,20 +522,16 @@ Selector NSAPI::getNSValueSelector(NSValueMethodKind MK) const {
                                      &Ctx.Idents.get("valueWithCATransform3D"));
         break;
       case NSValueWithRange:
-        Sel = Ctx.Selectors.getUnarySelector(
-                                             &Ctx.Idents.get("valueWithRange"));
+        Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("valueWithRange"));
         break;
       case NSValueWithPoint:
-        Sel = Ctx.Selectors.getUnarySelector(
-                                             &Ctx.Idents.get("valueWithPoint"));
+        Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("valueWithPoint"));
         break;
       case NSValueWithSize:
-        Sel = Ctx.Selectors.getUnarySelector(
-                                             &Ctx.Idents.get("valueWithSize"));
+        Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("valueWithSize"));
         break;
       case NSValueWithRect:
-        Sel = Ctx.Selectors.getUnarySelector(
-                                             &Ctx.Idents.get("valueWithRect"));
+        Sel = Ctx.Selectors.getUnarySelector(&Ctx.Idents.get("valueWithRect"));
         break;
       case NSValueWithEdgeInsets:
         Sel = Ctx.Selectors.getUnarySelector(

@@ -71,6 +71,8 @@ typedef struct AnotherCustomStruct {
     int dummy;
 } AnotherCustomStruct;
 
+extern CGRect returnRect();
+
 @interface NSObject @end
 
 @interface NSValue : NSObject
@@ -130,6 +132,7 @@ void noBoxableStructsAvailableYet() {
 
   [NSValue valueWithBytes:&customStruct objCType:@encode(CustomStruct)];
   [NSValue valueWithBytes:&anotherCustomStruct objCType:@encode(AnotherCustomStruct)];
+  [NSValue valueWithRect:returnRect()];
 }
 
 #define BOXABLE __attribute__((objc_boxable))
@@ -168,5 +171,6 @@ void boxableStructsAvailable() {
 
   [NSValue valueWithBytes:&customStruct objCType:@encode(CustomStruct)];
   [NSValue valueWithBytes:&anotherCustomStruct objCType:@encode(AnotherCustomStruct)];
+  [NSValue valueWithRect:returnRect()];
 }
 
