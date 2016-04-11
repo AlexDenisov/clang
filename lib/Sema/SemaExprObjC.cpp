@@ -2282,6 +2282,35 @@ DiagnoseCStringFormatDirectiveInObjCAPI(Sema &S,
   }
 }
 
+/// \brief Diagnose Visual Format Language gramar
+static void DiagnoseVisualFormatLanguageGrammarInObjCAPI(Sema &S,
+                                                         ObjCMethodDecl *Method,
+                                                         Selector Sel,
+                                                         Expr **Args,
+                                                         unsigned NumArgs) {
+  /*
+   
+    if is not ASCII:
+      warn
+    if is empty:
+      warn
+
+   */
+
+  const Expr *FirstArg = Args[0];
+  if (const ObjCStringLiteral *OSL = dyn_cast<ObjCStringLiteral>(FirstArg)) {
+    const StringLiteral *SL = OSL->getString();
+    assert(SL->isAscii());
+    unsigned int Length = SL->getLength();
+    if (Length == 0) {
+      S.Diag(OSL->getLocStart(), diag::warn_vfl_empty_string_is_not_allowed);
+    }
+
+    return;
+  }
+  return;
+}
+
 /// \brief Build an Objective-C class message expression.
 ///
 /// This routine takes care of both normal class messages and
@@ -2428,6 +2457,7 @@ ExprResult Sema::BuildClassMessage(TypeSourceInfo *ReceiverTypeInfo,
   }
   
   DiagnoseCStringFormatDirectiveInObjCAPI(*this, Method, Sel, Args, NumArgs);
+  DiagnoseVisualFormatLanguageGrammarInObjCAPI(*this, Method, Sel, Args, NumArgs);
   
   // Construct the appropriate ObjCMessageExpr.
   ObjCMessageExpr *Result;

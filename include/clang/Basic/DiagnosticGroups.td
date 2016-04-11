@@ -809,6 +809,10 @@ def ObjCLiteralComparison : DiagGroup<"objc-literal-compare", [
     ObjCStringComparison
   ]>;
 
+// ObjC Visual Format Langauge
+
+def VisualFormatLanguage : DiagGroup<"visual-format-language">;
+
 // Inline ASM warnings.
 def ASMOperandWidths : DiagGroup<"asm-operand-widths">;
 def ASM : DiagGroup<"asm", [

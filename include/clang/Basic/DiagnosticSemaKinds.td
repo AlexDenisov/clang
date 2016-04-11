@@ -8361,6 +8361,13 @@ def err_objc_type_args_wrong_arity : Error<
   "too %select{many|few}0 type arguments for class %1 (have %2, expected %3)">;
 }
 
+let CategoryName = "Visual Format Language" in {
+
+  def warn_vfl_empty_string_is_not_allowed : Warning<
+  "VFL: should not be empty">,
+  InGroup<VisualFormatLanguage>;
+}
+
 def err_objc_type_arg_not_id_compatible : Error<
   "type argument %0 is neither an Objective-C object nor a block type">;
 
